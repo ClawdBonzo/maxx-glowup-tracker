@@ -26,6 +26,9 @@ struct MaxxGlowUpApp: App {
             ProgressPhoto.self,
             DailyLog.self,
             Routine.self,
+            GamificationState.self,
+            Quest.self,
+            Badge.self,
         ])
     }
 }
