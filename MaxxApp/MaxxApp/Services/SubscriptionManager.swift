@@ -11,35 +11,23 @@ final class SubscriptionManager: NSObject {
 
     // MARK: - Published State
 
-    /// True when the user has an active "pro" entitlement
     var isPremium: Bool = false
-
-    /// Current offering packages fetched from RevenueCat
     var packages: [Package] = []
-
-    /// Loading state for offerings fetch
     var isLoadingOfferings: Bool = false
-
-    /// Error message for UI display
     var errorMessage: String?
-
-    /// Shows the celebration overlay after a successful purchase
     var showCelebration: Bool = false
-
-    /// Set after a purchase completes so the paywall can dismiss
     var purchaseCompleted: Bool = false
 
     // MARK: - Constants
 
-    /// The entitlement identifier configured in the RevenueCat dashboard
     static let entitlementID = "pro"
 
-    /// Product identifiers expected in App Store Connect
+    /// Canonical product identifiers — must match App Store Connect exactly
     enum ProductID: String, CaseIterable {
-        case weekly   = "com.clawdbonzo.MaxxApp.weekly"
-        case monthly  = "com.clawdbonzo.MaxxApp.monthly"
-        case yearly   = "com.clawdbonzo.MaxxApp.yearly"
-        case lifetime = "com.clawdbonzo.MaxxApp.lifetime"
+        case weekly   = "com.clawdbonzo.maxx.weekly"
+        case monthly  = "com.clawdbonzo.maxx.monthly"
+        case yearly   = "com.clawdbonzo.maxx.yearly"
+        case lifetime = "com.clawdbonzo.maxx.lifetime"
 
         var displayName: String {
             switch self {
@@ -50,10 +38,26 @@ final class SubscriptionManager: NSObject {
             }
         }
 
+        /// Badge shown inside the plan card
         var badge: String? {
             switch self {
             case .monthly: "BEST VALUE"
-            case .yearly: "58% OFF"
+            default: nil
+            }
+        }
+
+        /// Whether this plan includes a 3-day free trial
+        var hasTrial: Bool {
+            switch self {
+            case .monthly, .yearly: true
+            case .weekly, .lifetime: false
+            }
+        }
+
+        /// Yearly savings vs monthly ($9.99 × 12 = $119.88 vs $49.99 → ~58% off)
+        var savingsLabel: String? {
+            switch self {
+            case .yearly: "SAVE 58%"
             default: nil
             }
         }
@@ -70,11 +74,8 @@ final class SubscriptionManager: NSObject {
 
     // MARK: - Init
 
-    private override init() {
-        super.init()
-    }
+    private override init() { super.init() }
 
-    /// Call once from MaxxApp.init() after Purchases.configure()
     func start() {
         Purchases.shared.delegate = self
         Task { await checkEntitlements() }
@@ -86,20 +87,17 @@ final class SubscriptionManager: NSObject {
     func fetchOfferings() async {
         isLoadingOfferings = true
         errorMessage = nil
-
         do {
             let offerings = try await Purchases.shared.offerings()
             if let current = offerings.current {
-                // Sort: weekly → monthly → yearly → lifetime
-                packages = current.availablePackages.sorted { a, b in
-                    packageSortOrder(a) < packageSortOrder(b)
+                packages = current.availablePackages.sorted {
+                    packageSortOrder($0) < packageSortOrder($1)
                 }
             }
         } catch {
-            errorMessage = "Unable to load plans. Pull down to retry."
+            errorMessage = "Unable to load plans. Tap to retry."
             print("[SubscriptionManager] Offerings error: \(error)")
         }
-
         isLoadingOfferings = false
     }
 
@@ -109,10 +107,7 @@ final class SubscriptionManager: NSObject {
         errorMessage = nil
         do {
             let result = try await Purchases.shared.purchase(package: package)
-            if result.userCancelled {
-                return false
-            }
-            // entitlement will be updated via delegate
+            if result.userCancelled { return false }
             purchaseCompleted = true
             showCelebration = true
             HapticService.success()
@@ -155,28 +150,100 @@ final class SubscriptionManager: NSObject {
 
     // MARK: - Helpers
 
-    /// Fallback prices when RevenueCat hasn't loaded yet (shown as placeholders)
+    /// Fallback prices shown while RevenueCat loads (accurate to spec)
     func fallbackPrice(for productID: ProductID) -> String {
         switch productID {
-        case .weekly:   "$4.99/wk"
-        case .monthly:  "$9.99/mo"
-        case .yearly:   "$49.99/yr"
+        case .weekly:   "$4.99"
+        case .monthly:  "$9.99"
+        case .yearly:   "$49.99"
         case .lifetime: "$79.99"
         }
     }
 
+    func fallbackPeriod(for productID: ProductID) -> String {
+        switch productID {
+        case .weekly:   "/wk"
+        case .monthly:  "/mo"
+        case .yearly:   "/yr"
+        case .lifetime: ""
+        }
+    }
+
+    /// Per-week equivalent for multi-period plans
     func weeklyEquivalent(for package: Package) -> String? {
         let price = package.storeProduct.price as Decimal
         switch package.packageType {
         case .monthly:
             let weekly = price / 4
-            return "$\(NSDecimalNumber(decimal: weekly).rounding(accordingToBehavior: roundingBehavior).stringValue)/wk"
+            return "$\(roundedString(weekly))/wk"
         case .annual:
             let weekly = price / 52
-            return "$\(NSDecimalNumber(decimal: weekly).rounding(accordingToBehavior: roundingBehavior).stringValue)/wk"
+            return "$\(roundedString(weekly))/wk"
         default:
             return nil
         }
+    }
+
+    /// Actual savings percentage vs monthly for yearly plan
+    func yearlySavingsPercent(yearlyPackage: Package, monthlyPackage: Package?) -> Int {
+        let yearlyPrice = yearlyPackage.storeProduct.price as Decimal
+        if let monthly = monthlyPackage {
+            let monthlyPrice = monthly.storeProduct.price as Decimal
+            let fullYear = monthlyPrice * 12
+            guard fullYear > 0 else { return 58 }
+            let saving = (fullYear - yearlyPrice) / fullYear * 100
+            return Int(NSDecimalNumber(decimal: saving).rounding(accordingToBehavior: roundingBehavior).intValue)
+        }
+        // Fallback: $9.99×12=$119.88 vs $49.99 = 58%
+        return 58
+    }
+
+    /// Whether the live package has a free trial configured in RC
+    func hasTrial(_ package: Package) -> Bool {
+        if let pid = productID(for: package) { return pid.hasTrial }
+        // Fallback by type
+        return package.packageType == .monthly || package.packageType == .annual
+    }
+
+    func productID(for package: Package) -> ProductID? {
+        ProductID(rawValue: package.storeProduct.productIdentifier)
+    }
+
+    func isMonthly(_ package: Package) -> Bool {
+        package.packageType == .monthly ||
+        package.storeProduct.productIdentifier.contains("monthly")
+    }
+
+    func isBestValue(_ package: Package) -> Bool {
+        isMonthly(package)
+    }
+
+    func periodLabel(_ package: Package) -> String {
+        switch package.packageType {
+        case .weekly:  "/wk"
+        case .monthly: "/mo"
+        case .annual:  "/yr"
+        default: ""
+        }
+    }
+
+    // MARK: - Private
+
+    private func packageSortOrder(_ package: Package) -> Int {
+        if let pid = productID(for: package) { return pid.sortOrder }
+        switch package.packageType {
+        case .weekly:   return 0
+        case .monthly:  return 1
+        case .annual:   return 2
+        case .lifetime: return 3
+        default:        return 99
+        }
+    }
+
+    private func roundedString(_ value: Decimal) -> String {
+        NSDecimalNumber(decimal: value)
+            .rounding(accordingToBehavior: roundingBehavior)
+            .stringValue
     }
 
     private var roundingBehavior: NSDecimalNumberHandler {
@@ -189,28 +256,6 @@ final class SubscriptionManager: NSObject {
             raiseOnDivideByZero: false
         )
     }
-
-    func productID(for package: Package) -> ProductID? {
-        ProductID(rawValue: package.storeProduct.productIdentifier)
-    }
-
-    private func packageSortOrder(_ package: Package) -> Int {
-        if let pid = productID(for: package) {
-            return pid.sortOrder
-        }
-        switch package.packageType {
-        case .weekly: return 0
-        case .monthly: return 1
-        case .annual: return 2
-        case .lifetime: return 3
-        default: return 99
-        }
-    }
-
-    func isMonthly(_ package: Package) -> Bool {
-        package.packageType == .monthly ||
-        package.storeProduct.productIdentifier.contains("monthly")
-    }
 }
 
 // MARK: - PurchasesDelegate
@@ -221,8 +266,6 @@ extension SubscriptionManager: PurchasesDelegate {
         receivedUpdated customerInfo: CustomerInfo
     ) {
         let isActive = customerInfo.entitlements[SubscriptionManager.entitlementID]?.isActive ?? false
-        Task { @MainActor in
-            self.isPremium = isActive
-        }
+        Task { @MainActor in self.isPremium = isActive }
     }
 }
