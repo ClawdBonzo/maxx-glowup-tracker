@@ -94,11 +94,11 @@ struct AgeInputView: View {
             .padding(.bottom, 20)
         }
         .onAppear {
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+            animate = false
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
                 animate = true
             }
         }
-        .onDisappear { animate = false }
     }
 
     private var ageInsight: String {

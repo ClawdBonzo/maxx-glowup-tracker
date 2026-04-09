@@ -5,41 +5,53 @@ struct GoalSelectionView: View {
     @State private var animate = false
 
     var body: some View {
-        VStack(spacing: 32) {
+        VStack(spacing: 0) {
             Spacer()
 
-            VStack(spacing: 12) {
-                Text("What's your goal?")
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
+            // Hero icon
+            Text("🎯")
+                .font(.system(size: 52))
+                .scaleEffect(animate ? 1 : 0.4)
+                .opacity(animate ? 1 : 0)
+                .animation(.spring(response: 0.5, dampingFraction: 0.65).delay(0.02), value: animate)
 
+            // Header
+            VStack(spacing: 8) {
+                Text("What's your goal?")
+                    .font(.title2).fontWeight(.bold).foregroundColor(.white)
                 Text("We'll build your plan around this")
-                    .font(.subheadline)
-                    .foregroundColor(.maxxTextSecondary)
+                    .font(.subheadline).foregroundColor(.maxxTextSecondary)
             }
             .opacity(animate ? 1 : 0)
+            .offset(y: animate ? 0 : 14)
+            .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.1), value: animate)
+            .padding(.top, 16)
 
-            VStack(spacing: 12) {
+            // Options
+            VStack(spacing: 10) {
                 ForEach(Array(GlowUpGoal.allCases.enumerated()), id: \.element.id) { index, goal in
                     Button {
-                        viewModel.selectGoal(goal)
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            viewModel.selectGoal(goal)
+                        }
                     } label: {
                         HStack(spacing: 16) {
-                            Image(systemName: goal.icon)
-                                .font(.title2)
-                                .foregroundColor(.maxxPrimary)
-                                .frame(width: 36)
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(goal.rawValue)
+                            ZStack {
+                                Circle()
+                                    .fill(viewModel.selectedGoal == goal
+                                          ? Color.maxxPrimary.opacity(0.2)
+                                          : Color.maxxSurfaceLight)
+                                    .frame(width: 42, height: 42)
+                                Image(systemName: goal.icon)
                                     .font(.body)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(viewModel.selectedGoal == goal ? .maxxPrimary : .maxxTextSecondary)
+                            }
 
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(goal.rawValue)
+                                    .font(.body).fontWeight(.semibold).foregroundColor(.white)
                                 Text(goal.subtitle)
-                                    .font(.caption)
-                                    .foregroundColor(.maxxTextSecondary)
+                                    .font(.caption).foregroundColor(.maxxTextSecondary)
                             }
 
                             Spacer()
@@ -50,70 +62,59 @@ struct GoalSelectionView: View {
                                     .transition(.scale.combined(with: .opacity))
                             }
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 16)
+                        .padding(.horizontal, 16).padding(.vertical, 14)
                         .background(
-                            viewModel.selectedGoal == goal
-                            ? Color.maxxPrimary.opacity(0.15)
-                            : Color.maxxSurface
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(viewModel.selectedGoal == goal
+                                      ? Color.maxxPrimary.opacity(0.12)
+                                      : Color.maxxSurface)
                         )
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .stroke(
-                                    viewModel.selectedGoal == goal
-                                    ? Color.maxxPrimary
-                                    : Color.white.opacity(0.06),
+                                    viewModel.selectedGoal == goal ? Color.maxxPrimary : Color.white.opacity(0.06),
                                     lineWidth: viewModel.selectedGoal == goal ? 2 : 1
                                 )
                         )
+                        .scaleEffect(viewModel.selectedGoal == goal ? 1.02 : 1.0)
                     }
+                    .animation(.spring(response: 0.3), value: viewModel.selectedGoal)
                     .opacity(animate ? 1 : 0)
-                    .offset(y: animate ? 0 : 20)
+                    .offset(y: animate ? 0 : 14)
                     .animation(
-                        .spring(response: 0.5, dampingFraction: 0.8)
-                        .delay(Double(index) * 0.06),
+                        .spring(response: 0.5, dampingFraction: 0.78).delay(0.18 + Double(index) * 0.06),
                         value: animate
                     )
                 }
             }
             .padding(.horizontal, 24)
+            .padding(.top, 20)
 
             Spacer()
 
-            VStack(spacing: 16) {
-                Button {
-                    viewModel.nextStep()
-                } label: {
+            // Navigation
+            VStack(spacing: 14) {
+                Button { viewModel.nextStep() } label: {
                     Text("Continue")
-                        .font(.headline)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 18)
-                        .background(
-                            viewModel.canProceed
-                            ? AnyShapeStyle(Color.maxxGradient)
-                            : AnyShapeStyle(Color.maxxSurfaceLight)
-                        )
+                        .font(.headline).fontWeight(.bold).foregroundColor(.white)
+                        .frame(maxWidth: .infinity).padding(.vertical, 18)
+                        .background(viewModel.canProceed ? AnyShapeStyle(Color.maxxGradient) : AnyShapeStyle(Color.maxxSurfaceLight))
                         .clipShape(Capsule())
                 }
                 .disabled(!viewModel.canProceed)
+                .animation(.easeInOut(duration: 0.2), value: viewModel.canProceed)
 
-                Button("Back") {
-                    viewModel.previousStep()
-                }
-                .font(.subheadline)
-                .foregroundColor(.maxxTextMuted)
+                Button("Back") { viewModel.previousStep() }
+                    .font(.subheadline).foregroundColor(.maxxTextMuted)
             }
             .padding(.horizontal, 24)
-            .padding(.bottom, 20)
+            .padding(.bottom, 24)
+            .opacity(animate ? 1 : 0)
+            .animation(.spring(response: 0.5, dampingFraction: 0.8).delay(0.45), value: animate)
         }
         .onAppear {
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                animate = true
-            }
+            animate = false
+            withAnimation { animate = true }
         }
-        .onDisappear { animate = false }
     }
 }

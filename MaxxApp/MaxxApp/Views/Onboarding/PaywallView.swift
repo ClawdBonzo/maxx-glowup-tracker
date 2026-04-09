@@ -13,35 +13,22 @@ struct PaywallView: View {
 
     var body: some View {
         ZStack {
-            // Main paywall content
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    closeButton
-                    heroSection
-                    trialBadge
-                    headline
-                    featuresList
-                    packageCards
-                    ctaButton
-                    trialDisclaimer
-                    skipButton
-                    legalFooter
-                }
-            }
-            .opacity(showCelebration ? 0.3 : 1)
+            Color.maxxBackground.ignoresSafeArea()
 
-            // Celebration overlay
             if showCelebration {
                 celebrationOverlay
+            } else {
+                VStack(spacing: 0) {
+                    closeButton
+                    paywallContent
+                }
             }
         }
-        .background(Color.maxxBackground.ignoresSafeArea())
         .onAppear {
-            withAnimation(.spring(response: 0.7, dampingFraction: 0.8)) {
+            withAnimation(.spring(response: 0.65, dampingFraction: 0.8)) {
                 animate = true
             }
             Task { await subManager.fetchOfferings() }
-            // Default-select monthly (the BEST VALUE plan)
             selectDefaultPackage()
         }
         .onChange(of: subManager.packages) { _, _ in
@@ -49,147 +36,137 @@ struct PaywallView: View {
         }
     }
 
-    // MARK: - Close / Skip Button
+    // MARK: - No-Scroll Paywall Layout
+
+    private var paywallContent: some View {
+        VStack(spacing: 0) {
+            heroSection
+            trialBadge
+            headline
+            featuresList
+            packageCards
+            ctaButton
+            compactFooter
+        }
+        .padding(.bottom, 8)
+    }
+
+    // MARK: - Close Button
 
     private var closeButton: some View {
         HStack {
             Spacer()
-            Button {
-                onContinue()
-            } label: {
+            Button { onContinue() } label: {
                 Image(systemName: "xmark.circle.fill")
                     .font(.title2)
-                    .foregroundStyle(.white.opacity(0.3))
+                    .foregroundStyle(.white.opacity(0.25))
             }
         }
         .padding(.horizontal, 20)
-        .padding(.top, 8)
+        .padding(.top, 6)
+        .padding(.bottom, 2)
     }
 
-    // MARK: - Hero Illustration (Before/After teaser)
+    // MARK: - Hero
 
     private var heroSection: some View {
         ZStack {
-            // Neon glow behind the image
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(hex: "6C5CE7").opacity(0.3),
-                            Color(hex: "00CEC9").opacity(0.2),
-                            Color(hex: "FDCB6E").opacity(0.15),
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(height: 140)
-                .blur(radius: 30)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(LinearGradient(
+                    colors: [Color(hex: "6C5CE7").opacity(0.25), Color(hex: "00CEC9").opacity(0.15)],
+                    startPoint: .topLeading, endPoint: .bottomTrailing
+                ))
+                .frame(height: 96)
+                .blur(radius: 20)
 
             Image("Onboarding4Paywall")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(maxHeight: 140)
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .frame(maxHeight: 96)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .stroke(
                             LinearGradient(
-                                colors: [
-                                    Color(hex: "6C5CE7").opacity(0.6),
-                                    Color(hex: "00CEC9").opacity(0.4),
-                                    Color(hex: "FDCB6E").opacity(0.3),
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                                colors: [Color(hex: "6C5CE7").opacity(0.6), Color(hex: "00CEC9").opacity(0.4)],
+                                startPoint: .topLeading, endPoint: .bottomTrailing
                             ),
                             lineWidth: 1.5
                         )
                 )
-                .shadow(color: Color(hex: "6C5CE7").opacity(0.4), radius: 24, y: 8)
+                .shadow(color: Color(hex: "6C5CE7").opacity(0.35), radius: 14, y: 5)
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 0)
+        .padding(.horizontal, 28)
         .opacity(animate ? 1 : 0)
-        .scaleEffect(animate ? 1 : 0.85)
+        .scaleEffect(animate ? 1 : 0.88)
+        .animation(.spring(response: 0.65, dampingFraction: 0.75), value: animate)
     }
 
-    // MARK: - Free Trial Badge
+    // MARK: - Trial Badge
 
     private var trialBadge: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "gift.fill")
-                .font(.subheadline)
-
+        HStack(spacing: 6) {
+            Image(systemName: "gift.fill").font(.footnote)
             Text("3-DAY FREE TRIAL")
-                .font(.subheadline)
-                .fontWeight(.heavy)
-                .tracking(1)
+                .font(.footnote).fontWeight(.heavy).tracking(1)
         }
         .foregroundColor(.white)
-        .padding(.horizontal, 20)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 14).padding(.vertical, 7)
         .background(
             Capsule()
                 .fill(Color(hex: "00B894"))
-                .shadow(color: Color(hex: "00B894").opacity(0.4), radius: 12, y: 4)
+                .shadow(color: Color(hex: "00B894").opacity(0.45), radius: 8, y: 3)
         )
-        .padding(.top, 12)
+        .padding(.top, 10)
         .opacity(animate ? 1 : 0)
-        .offset(y: animate ? 0 : 10)
+        .offset(y: animate ? 0 : 6)
+        .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.08), value: animate)
     }
 
     // MARK: - Headline
 
     private var headline: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 3) {
             Text("Unlock Your Full")
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-
+                .font(.title3).fontWeight(.bold).foregroundColor(.white)
             Text("Glow-Up Transformation")
-                .font(.title2)
-                .fontWeight(.black)
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [Color(hex: "6C5CE7"), Color(hex: "00CEC9"), Color(hex: "FDCB6E")],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
+                .font(.title3).fontWeight(.black)
+                .foregroundStyle(LinearGradient(
+                    colors: [Color(hex: "6C5CE7"), Color(hex: "00CEC9"), Color(hex: "FDCB6E")],
+                    startPoint: .leading, endPoint: .trailing
+                ))
         }
         .multilineTextAlignment(.center)
-        .padding(.top, 10)
-        .padding(.horizontal, 20)
+        .padding(.top, 8)
         .opacity(animate ? 1 : 0)
+        .scaleEffect(animate ? 1 : 0.94)
+        .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.12), value: animate)
     }
 
-    // MARK: - Features List
+    // MARK: - Features (4 rows, compact)
 
     private var featuresList: some View {
-        VStack(spacing: 12) {
-            proFeatureRow(icon: "camera.fill", text: "Unlimited progress photos & comparisons")
+        VStack(spacing: 7) {
+            proFeatureRow(icon: "camera.fill",               text: "Unlimited progress photos & comparisons")
             proFeatureRow(icon: "chart.line.uptrend.xyaxis", text: "Advanced analytics & glow score insights")
-            proFeatureRow(icon: "wand.and.stars", text: "Premium expert-curated routines")
-            proFeatureRow(icon: "bell.badge.fill", text: "Smart reminders that keep you consistent")
-            proFeatureRow(icon: "lock.open.fill", text: "Every future feature, forever")
+            proFeatureRow(icon: "flame.fill",                text: "Daily quests, XP levels & badges")
+            proFeatureRow(icon: "lock.open.fill",            text: "Every future feature, forever")
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 12)
+        .padding(.horizontal, 28)
+        .padding(.top, 10)
         .opacity(animate ? 1 : 0)
+        .offset(y: animate ? 0 : 8)
+        .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.16), value: animate)
     }
 
     private func proFeatureRow(icon: String, text: String) -> some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 10) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.body)
+                .font(.footnote)
                 .foregroundColor(Color(hex: "00CEC9"))
-
             Text(text)
                 .font(.subheadline)
                 .foregroundColor(.maxxTextSecondary)
-
             Spacer()
         }
     }
@@ -197,9 +174,8 @@ struct PaywallView: View {
     // MARK: - Package Cards
 
     private var packageCards: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 7) {
             if subManager.packages.isEmpty {
-                // Fallback static cards while offerings load
                 ForEach(SubscriptionManager.ProductID.allCases, id: \.self) { pid in
                     staticPackageCard(pid)
                 }
@@ -210,169 +186,125 @@ struct PaywallView: View {
             }
         }
         .padding(.horizontal, 20)
-        .padding(.top, 16)
+        .padding(.top, 10)
         .opacity(animate ? 1 : 0)
+        .offset(y: animate ? 0 : 10)
+        .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.2), value: animate)
     }
 
-    // Card using live RevenueCat data
     private func livePackageCard(_ package: Package) -> some View {
         let isSelected = selectedPackage?.identifier == package.identifier
         let isBestValue = subManager.isMonthly(package)
         let pid = subManager.productID(for: package)
 
         return Button {
-            withAnimation(.spring(response: 0.3)) {
+            withAnimation(.spring(response: 0.28, dampingFraction: 0.7)) {
                 selectedPackage = package
             }
             HapticService.selection()
         } label: {
             HStack(spacing: 0) {
-                // Selection indicator
                 ZStack {
                     Circle()
                         .stroke(isSelected ? Color(hex: "00CEC9") : Color.white.opacity(0.2), lineWidth: 2)
-                        .frame(width: 22, height: 22)
-
+                        .frame(width: 20, height: 20)
                     if isSelected {
-                        Circle()
-                            .fill(Color(hex: "00CEC9"))
-                            .frame(width: 14, height: 14)
+                        Circle().fill(Color(hex: "00CEC9")).frame(width: 12, height: 12)
+                            .transition(.scale.combined(with: .opacity))
                     }
                 }
-                .padding(.trailing, 14)
+                .animation(.spring(response: 0.3), value: isSelected)
+                .padding(.trailing, 12)
 
-                // Plan info
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
                         Text(pid?.displayName ?? package.storeProduct.localizedTitle)
-                            .font(.body)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-
+                            .font(.subheadline).fontWeight(.semibold).foregroundColor(.white)
                         if let badge = pid?.badge {
                             Text(badge)
-                                .font(.system(size: 9, weight: .heavy))
+                                .font(.system(size: 8, weight: .heavy))
                                 .foregroundColor(.maxxBackground)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(
-                                    isBestValue
-                                    ? Color(hex: "00CEC9")
-                                    : Color(hex: "FDCB6E")
-                                )
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(isBestValue ? Color(hex: "00CEC9") : Color(hex: "FDCB6E"))
                                 .clipShape(Capsule())
                         }
                     }
-
                     if let weeklyEq = subManager.weeklyEquivalent(for: package) {
-                        Text("Just \(weeklyEq)")
-                            .font(.caption)
-                            .foregroundColor(.maxxTextMuted)
+                        Text("Just \(weeklyEq)").font(.caption2).foregroundColor(.maxxTextMuted)
                     }
-
                     if package.packageType == .lifetime {
-                        Text("Pay once, own forever")
-                            .font(.caption)
-                            .foregroundColor(.maxxTextMuted)
+                        Text("Pay once, own forever").font(.caption2).foregroundColor(.maxxTextMuted)
                     }
                 }
 
                 Spacer()
 
-                // Price
-                VStack(alignment: .trailing, spacing: 2) {
+                VStack(alignment: .trailing, spacing: 1) {
                     Text(package.localizedPriceString)
-                        .font(.body)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-
+                        .font(.subheadline).fontWeight(.bold).foregroundColor(.white)
                     if package.packageType != .lifetime {
-                        Text(periodLabel(package))
-                            .font(.caption2)
-                            .foregroundColor(.maxxTextMuted)
+                        Text(periodLabel(package)).font(.caption2).foregroundColor(.maxxTextMuted)
                     }
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .padding(.horizontal, 14).padding(.vertical, 11)
             .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(isSelected
-                          ? (isBestValue
-                             ? Color(hex: "00CEC9").opacity(0.1)
-                             : Color.maxxPrimary.opacity(0.1))
+                          ? (isBestValue ? Color(hex: "00CEC9").opacity(0.1) : Color.maxxPrimary.opacity(0.1))
                           : Color.maxxSurface)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(
-                        isSelected
-                        ? (isBestValue ? Color(hex: "00CEC9") : Color.maxxPrimary)
-                        : Color.white.opacity(0.06),
+                        isSelected ? (isBestValue ? Color(hex: "00CEC9") : Color.maxxPrimary) : Color.white.opacity(0.06),
                         lineWidth: isSelected ? 2 : 1
                     )
             )
             .overlay(alignment: .topTrailing) {
                 if isBestValue {
                     Text("POPULAR")
-                        .font(.system(size: 8, weight: .heavy))
+                        .font(.system(size: 7, weight: .heavy))
                         .foregroundColor(.maxxBackground)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color(hex: "00CEC9"))
-                        .clipShape(Capsule())
-                        .offset(x: -8, y: -8)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(Color(hex: "00CEC9")).clipShape(Capsule())
+                        .offset(x: -6, y: -6)
                 }
             }
         }
     }
 
-    // Fallback card when offerings haven't loaded
     private func staticPackageCard(_ pid: SubscriptionManager.ProductID) -> some View {
-        let isSelected = (pid == .monthly) // default selected
-        let isBestValue = (pid == .monthly)
+        let isSelected = pid == .monthly
+        let isBestValue = pid == .monthly
 
         return HStack(spacing: 0) {
             ZStack {
-                Circle()
-                    .stroke(isSelected ? Color(hex: "00CEC9") : Color.white.opacity(0.2), lineWidth: 2)
-                    .frame(width: 22, height: 22)
-                if isSelected {
-                    Circle().fill(Color(hex: "00CEC9")).frame(width: 14, height: 14)
-                }
-            }
-            .padding(.trailing, 14)
+                Circle().stroke(isSelected ? Color(hex: "00CEC9") : Color.white.opacity(0.2), lineWidth: 2)
+                    .frame(width: 20, height: 20)
+                if isSelected { Circle().fill(Color(hex: "00CEC9")).frame(width: 12, height: 12) }
+            }.padding(.trailing, 12)
 
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 8) {
-                    Text(pid.displayName)
-                        .font(.body).fontWeight(.semibold).foregroundColor(.white)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(pid.displayName).font(.subheadline).fontWeight(.semibold).foregroundColor(.white)
                     if let badge = pid.badge {
                         Text(badge)
-                            .font(.system(size: 9, weight: .heavy))
-                            .foregroundColor(.maxxBackground)
-                            .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(isBestValue ? Color(hex: "00CEC9") : Color(hex: "FDCB6E"))
-                            .clipShape(Capsule())
+                            .font(.system(size: 8, weight: .heavy)).foregroundColor(.maxxBackground)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(isBestValue ? Color(hex: "00CEC9") : Color(hex: "FDCB6E")).clipShape(Capsule())
                     }
                 }
             }
-
             Spacer()
-
             Text(subManager.fallbackPrice(for: pid))
-                .font(.body).fontWeight(.bold).foregroundColor(.white)
+                .font(.subheadline).fontWeight(.bold).foregroundColor(.white)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(isSelected ? Color(hex: "00CEC9").opacity(0.1) : Color.maxxSurface)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(isSelected ? Color(hex: "00CEC9") : Color.white.opacity(0.06), lineWidth: isSelected ? 2 : 1)
-        )
+        .padding(.horizontal, 14).padding(.vertical, 11)
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(isSelected ? Color(hex: "00CEC9").opacity(0.1) : Color.maxxSurface))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .stroke(isSelected ? Color(hex: "00CEC9") : Color.white.opacity(0.06), lineWidth: isSelected ? 2 : 1))
     }
 
     // MARK: - CTA Button
@@ -391,106 +323,69 @@ struct PaywallView: View {
                 }
             }
         } label: {
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 if isPurchasing {
-                    ProgressView()
-                        .tint(.white)
+                    ProgressView().tint(.white)
                 } else {
-                    Image(systemName: "sparkles")
-                        .font(.headline)
-
-                    Text("Start My Free Trial")
-                        .font(.headline)
-                        .fontWeight(.heavy)
+                    Image(systemName: "sparkles").font(.subheadline)
+                    Text("Start My Free Trial").font(.headline).fontWeight(.heavy)
                 }
             }
             .foregroundColor(Color(hex: "0A0A0F"))
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 18)
+            .padding(.vertical, 16)
             .background(
                 LinearGradient(
                     colors: [Color(hex: "00CEC9"), Color(hex: "6C5CE7")],
-                    startPoint: .leading,
-                    endPoint: .trailing
+                    startPoint: .leading, endPoint: .trailing
                 )
             )
             .clipShape(Capsule())
-            .shadow(color: Color(hex: "00CEC9").opacity(0.4), radius: 16, y: 6)
+            .shadow(color: Color(hex: "00CEC9").opacity(0.35), radius: 12, y: 4)
         }
         .disabled(isPurchasing)
         .padding(.horizontal, 20)
-        .padding(.top, 16)
+        .padding(.top, 12)
+        .opacity(animate ? 1 : 0)
+        .scaleEffect(animate ? 1 : 0.96)
+        .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.24), value: animate)
     }
 
-    // MARK: - Trial Disclaimer
+    // MARK: - Compact Footer
 
-    private var trialDisclaimer: some View {
-        VStack(spacing: 6) {
-            if let package = selectedPackage {
-                Text("3-day free trial, then \(package.localizedPriceString)\(periodLabel(package))")
-                    .font(.caption)
-                    .foregroundColor(.maxxTextSecondary)
-            } else {
-                Text("3-day free trial, then $9.99/mo")
-                    .font(.caption)
-                    .foregroundColor(.maxxTextSecondary)
+    private var compactFooter: some View {
+        VStack(spacing: 8) {
+            Group {
+                if let package = selectedPackage {
+                    Text("3-day free trial · then \(package.localizedPriceString)\(periodLabel(package)) · Cancel anytime")
+                } else {
+                    Text("3-day free trial · then $9.99/mo · Cancel anytime")
+                }
             }
+            .font(.caption)
+            .foregroundColor(.maxxTextSecondary)
 
-            Text("Cancel anytime in Settings. No charge during trial.")
-                .font(.caption2)
-                .foregroundColor(.maxxTextMuted)
+            HStack(spacing: 14) {
+                Button("Continue free") { onContinue() }
+                Text("·").foregroundColor(.maxxTextMuted)
+                Button("Restore") { Task { await subManager.restorePurchases() } }
+                Text("·").foregroundColor(.maxxTextMuted)
+                Button("Terms") { }
+                Text("·").foregroundColor(.maxxTextMuted)
+                Button("Privacy") { }
+            }
+            .font(.caption)
+            .foregroundColor(.maxxTextMuted)
 
             if let error = subManager.errorMessage {
-                Text(error)
-                    .font(.caption2)
-                    .foregroundColor(.maxxError)
-                    .padding(.top, 4)
+                Text(error).font(.caption2).foregroundColor(.maxxError)
             }
         }
-        .padding(.top, 12)
-        .padding(.horizontal, 24)
         .multilineTextAlignment(.center)
-    }
-
-    // MARK: - Skip
-
-    private var skipButton: some View {
-        Button {
-            onContinue()
-        } label: {
-            Text("Continue with limited version")
-                .font(.subheadline)
-                .foregroundColor(.maxxTextMuted)
-                .underline()
-        }
-        .padding(.top, 16)
-        .padding(.bottom, 8)
-    }
-
-    // MARK: - Legal Footer
-
-    private var legalFooter: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 20) {
-                Button("Terms of Use") { }
-                    .font(.caption2).foregroundColor(.maxxTextMuted)
-
-                Button("Privacy Policy") { }
-                    .font(.caption2).foregroundColor(.maxxTextMuted)
-
-                Button("Restore Purchases") {
-                    Task { await subManager.restorePurchases() }
-                }
-                .font(.caption2).foregroundColor(.maxxTextMuted)
-            }
-
-            Text("Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.")
-                .font(.system(size: 9))
-                .foregroundColor(.maxxTextMuted.opacity(0.6))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
-        }
-        .padding(.bottom, 24)
+        .padding(.top, 8)
+        .padding(.horizontal, 20)
+        .opacity(animate ? 1 : 0)
+        .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.28), value: animate)
     }
 
     // MARK: - Celebration Overlay
@@ -498,15 +393,12 @@ struct PaywallView: View {
     private var celebrationOverlay: some View {
         VStack(spacing: 28) {
             Spacer()
-
-            // Neon glow ring around logo
             ZStack {
                 Circle()
                     .stroke(
                         LinearGradient(
                             colors: [Color(hex: "6C5CE7"), Color(hex: "00CEC9"), Color(hex: "FDCB6E")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+                            startPoint: .topLeading, endPoint: .bottomTrailing
                         ),
                         lineWidth: 4
                     )
@@ -524,19 +416,13 @@ struct PaywallView: View {
 
             VStack(spacing: 8) {
                 Text("Welcome to Maxx Pro!")
-                    .font(.title)
-                    .fontWeight(.black)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color(hex: "6C5CE7"), Color(hex: "00CEC9"), Color(hex: "FDCB6E")],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-
+                    .font(.title).fontWeight(.black)
+                    .foregroundStyle(LinearGradient(
+                        colors: [Color(hex: "6C5CE7"), Color(hex: "00CEC9"), Color(hex: "FDCB6E")],
+                        startPoint: .leading, endPoint: .trailing
+                    ))
                 Text("Your full glow-up journey starts now")
-                    .font(.subheadline)
-                    .foregroundColor(.maxxTextSecondary)
+                    .font(.subheadline).foregroundColor(.maxxTextSecondary)
             }
             .opacity(showCelebration ? 1 : 0)
             .offset(y: showCelebration ? 0 : 20)
@@ -544,19 +430,17 @@ struct PaywallView: View {
 
             Image(systemName: "crown.fill")
                 .font(.system(size: 48))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [Color(hex: "FDCB6E"), Color(hex: "F0932B")],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
+                .foregroundStyle(LinearGradient(
+                    colors: [Color(hex: "FDCB6E"), Color(hex: "F0932B")],
+                    startPoint: .top, endPoint: .bottom
+                ))
                 .opacity(showCelebration ? 1 : 0)
                 .scaleEffect(showCelebration ? 1 : 0.5)
                 .animation(.spring(response: 0.5).delay(0.5), value: showCelebration)
 
             Spacer()
         }
+        .background(Color.maxxBackground.ignoresSafeArea())
         .transition(.opacity)
     }
 
@@ -564,17 +448,15 @@ struct PaywallView: View {
 
     private func selectDefaultPackage() {
         guard selectedPackage == nil, !subManager.packages.isEmpty else { return }
-        selectedPackage = subManager.packages.first(where: { subManager.isMonthly($0) })
-            ?? subManager.packages.first
+        selectedPackage = subManager.packages.first(where: { subManager.isMonthly($0) }) ?? subManager.packages.first
     }
 
     private func periodLabel(_ package: Package) -> String {
         switch package.packageType {
-        case .weekly: "/wk"
+        case .weekly:  "/wk"
         case .monthly: "/mo"
-        case .annual: "/yr"
-        case .lifetime: ""
-        default: ""
+        case .annual:  "/yr"
+        default:       ""
         }
     }
 }
