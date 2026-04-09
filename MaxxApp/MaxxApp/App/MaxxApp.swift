@@ -7,9 +7,15 @@ struct MaxxGlowUpApp: App {
     @State private var subscriptionManager = SubscriptionManager.shared
 
     init() {
-        // Configure RevenueCat SDK
-        Purchases.logLevel = .debug
-        // TODO: Replace with LIVE key (starts with "live_") before submitting to App Store
+        // Configure RevenueCat SDK.
+        // Key "appl_TlXDHfbMGnSrHUfrInSbSaENgvS" is the PRODUCTION public SDK key
+        // for the "Maxx: Glow-Up Tracker" app (verified Apr 7 2026 in RC dashboard).
+        // Apple public SDK keys start with "appl_" — this is correct and ready for App Store.
+        #if DEBUG
+        Purchases.logLevel = .info
+        #else
+        Purchases.logLevel = .error
+        #endif
         Purchases.configure(withAPIKey: "appl_TlXDHfbMGnSrHUfrInSbSaENgvS")
 
         // Start subscription manager (sets delegate, fetches offerings + entitlements)

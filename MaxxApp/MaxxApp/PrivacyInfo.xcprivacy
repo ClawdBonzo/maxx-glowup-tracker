@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+    Maxx: Glow-Up Tracker — Privacy Nutrition Label
+    https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
+-->
+<dict>
+    <!-- ═══ Tracking ═══════════════════════════════════════════════════════ -->
+    <!-- Maxx does NOT track users across apps or websites owned by others.   -->
+    <key>NSPrivacyTracking</key>
+    <false/>
+
+    <!-- ═══ Tracking Domains ═══════════════════════════════════════════════ -->
+    <!-- No cross-app/web tracking domains used.                              -->
+    <key>NSPrivacyTrackingDomains</key>
+    <array/>
+
+    <!-- ═══ Required Reason APIs ════════════════════════════════════════════ -->
+    <!-- Declare every privacy-sensitive API the app uses.                    -->
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+        <!-- UserDefaults — RevenueCat SDK reads/writes preferences -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <!-- CA92.1: App uses UserDefaults to store app-specific settings/state -->
+                <string>CA92.1</string>
+            </array>
+        </dict>
+        <!-- File Timestamps — SwiftData / NSPersistentContainer reads file dates -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <!-- C617.1: App uses file timestamps to manage its own on-disk data -->
+                <string>C617.1</string>
+            </array>
+        </dict>
+        <!-- Disk Space — SwiftData / PhotoStorage checks available space -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <!-- E174.1: Disk space checked before writing user data -->
+                <string>E174.1</string>
+            </array>
+        </dict>
+    </array>
+
+    <!-- ═══ Data Collection ══════════════════════════════════════════════════ -->
+    <!-- Maxx collects only user-provided data stored locally on-device.        -->
+    <!-- RevenueCat collects purchase receipts (linked to App Store identity).  -->
+    <key>NSPrivacyCollectedDataTypes</key>
+    <array>
+        <!-- Purchase history — used for unlocking premium features -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypePurchaseHistory</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+        <!-- Photos — user explicitly adds progress photos; stored only on-device -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypePhotosOrVideos</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>

@@ -6,6 +6,9 @@ struct GlowScoreRing: View {
     @State private var animatedScore: Double = 0
     @State private var outerPulse = false
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorSchemeContrast) private var contrast
+
     private var neonGradientColors: [Color] {
         [Color(hex: "8B00FF"), Color(hex: "00F0FF"), Color(hex: "FFD700")]
     }
@@ -21,33 +24,40 @@ struct GlowScoreRing: View {
 
     var body: some View {
         ZStack {
-            // Outer ambient pulse ring
-            Circle()
-                .stroke(
-                    AngularGradient(colors: neonGradientColors, center: .center),
-                    style: StrokeStyle(lineWidth: size * 0.015, lineCap: .round)
-                )
-                .frame(width: size * 1.35, height: size * 1.35)
-                .blur(radius: outerPulse ? 18 : 10)
-                .opacity(outerPulse ? 0.25 : 0.10)
-                .animation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true), value: outerPulse)
+            // Outer ambient pulse ring — hidden when reduce motion or high contrast
+            if !reduceMotion && contrast != .increased {
+                Circle()
+                    .stroke(
+                        AngularGradient(colors: neonGradientColors, center: .center),
+                        style: StrokeStyle(lineWidth: size * 0.015, lineCap: .round)
+                    )
+                    .frame(width: size * 1.35, height: size * 1.35)
+                    .blur(radius: outerPulse ? 18 : 10)
+                    .opacity(outerPulse ? 0.25 : 0.10)
+                    .animation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true), value: outerPulse)
+                    .accessibilityHidden(true)
+            }
 
             // Track ring
             Circle()
                 .stroke(Color.maxxSurfaceLight, lineWidth: size * 0.08)
                 .frame(width: size, height: size)
+                .accessibilityHidden(true)
 
-            // Bloom layer (blurred duplicate for glow)
-            Circle()
-                .trim(from: 0, to: animatedScore / 100)
-                .stroke(
-                    AngularGradient(colors: neonGradientColors, center: .center),
-                    style: StrokeStyle(lineWidth: size * 0.10, lineCap: .round)
-                )
-                .frame(width: size, height: size)
-                .rotationEffect(.degrees(-90))
-                .blur(radius: 16)
-                .opacity(0.70)
+            // Bloom layer (blurred duplicate for glow) — skip in high-contrast mode
+            if contrast != .increased {
+                Circle()
+                    .trim(from: 0, to: animatedScore / 100)
+                    .stroke(
+                        AngularGradient(colors: neonGradientColors, center: .center),
+                        style: StrokeStyle(lineWidth: size * 0.10, lineCap: .round)
+                    )
+                    .frame(width: size, height: size)
+                    .rotationEffect(.degrees(-90))
+                    .blur(radius: 16)
+                    .opacity(0.70)
+                    .accessibilityHidden(true)
+            }
 
             // Sharp ring on top
             Circle()
@@ -58,6 +68,7 @@ struct GlowScoreRing: View {
                 )
                 .frame(width: size, height: size)
                 .rotationEffect(.degrees(-90))
+                .accessibilityHidden(true)
 
             // Center score
             VStack(spacing: 2) {
@@ -70,7 +81,7 @@ struct GlowScoreRing: View {
                             endPoint: .bottom
                         )
                     )
-                    .shadow(color: Color(hex: "8B00FF").opacity(0.8), radius: 8)
+                    .shadow(color: Color(hex: "8B00FF").opacity(contrast == .increased ? 0 : 0.8), radius: 8)
                     .contentTransition(.numericText())
 
                 Text(scoreLabel)
@@ -85,11 +96,17 @@ struct GlowScoreRing: View {
                     )
             }
         }
+        // Flatten to single Metal pass
+        .drawingGroup()
+        // Unified accessibility element
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Glow score: \(Int(score)) out of 100. \(scoreLabel)"))
+        .accessibilityValue(Text("\(Int(score)) percent"))
         .onAppear {
             withAnimation(.spring(response: 1.2, dampingFraction: 0.7).delay(0.2)) {
                 animatedScore = score
             }
-            outerPulse = true
+            if !reduceMotion { outerPulse = true }
         }
         .onChange(of: score) { _, newValue in
             withAnimation(.spring(response: 0.7)) {

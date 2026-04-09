@@ -7,11 +7,15 @@ struct NeonGlowModifier: ViewModifier {
     var radius: CGFloat = 12
     var intensity: Double = 1.0
 
+    @Environment(\.colorSchemeContrast) private var contrast
+
     func body(content: Content) -> some View {
+        // Reduce glow intensity in high-contrast mode — keep it accessible but still branded
+        let effectiveIntensity = contrast == .increased ? intensity * 0.25 : intensity
         content
-            .shadow(color: color.opacity(0.8 * intensity), radius: radius * 0.5)
-            .shadow(color: color.opacity(0.5 * intensity), radius: radius)
-            .shadow(color: color.opacity(0.25 * intensity), radius: radius * 2)
+            .shadow(color: color.opacity(0.8 * effectiveIntensity), radius: radius * 0.5)
+            .shadow(color: color.opacity(0.5 * effectiveIntensity), radius: radius)
+            .shadow(color: color.opacity(0.25 * effectiveIntensity), radius: radius * 2)
     }
 }
 
@@ -122,11 +126,18 @@ struct NeonPulseModifier: ViewModifier {
     @State private var pulsing = false
     var color: Color = .maxxPrimary
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorSchemeContrast) private var contrast
+
     func body(content: Content) -> some View {
+        // Static shadow in reduce-motion or high-contrast — no animation
+        let opacity = reduceMotion || contrast == .increased ? 0.4 : (pulsing ? 0.9 : 0.3)
+        let shadowRadius: CGFloat = reduceMotion || contrast == .increased ? 8 : (pulsing ? 18 : 6)
         content
-            .shadow(color: color.opacity(pulsing ? 0.9 : 0.3), radius: pulsing ? 18 : 6)
-            .shadow(color: color.opacity(pulsing ? 0.5 : 0.1), radius: pulsing ? 36 : 12)
+            .shadow(color: color.opacity(opacity), radius: shadowRadius)
+            .shadow(color: color.opacity(opacity * 0.5), radius: shadowRadius * 2)
             .onAppear {
+                guard !reduceMotion && contrast != .increased else { return }
                 withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) {
                     pulsing = true
                 }
