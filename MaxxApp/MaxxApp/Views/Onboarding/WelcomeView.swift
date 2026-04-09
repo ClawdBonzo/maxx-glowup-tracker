@@ -14,30 +14,32 @@ struct WelcomeView: View {
                 // Ambient glow behind image
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
                     .fill(LinearGradient(
-                        colors: [Color(hex: "6C5CE7").opacity(glowPulse ? 0.35 : 0.2),
-                                 Color(hex: "00CEC9").opacity(glowPulse ? 0.25 : 0.1)],
+                        colors: [Color.maxxPrimary.opacity(glowPulse ? 0.35 : 0.2),
+                                 Color.maxxCyan.opacity(glowPulse ? 0.25 : 0.1)],
                         startPoint: .topLeading, endPoint: .bottomTrailing
                     ))
                     .frame(height: 240)
                     .blur(radius: 36)
                     .animation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true), value: glowPulse)
+                    .accessibilityHidden(true)
 
                 Image("Onboarding1Welcome")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(maxHeight: 240)
                     .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                    .shadow(color: Color(hex: "6C5CE7").opacity(0.45), radius: 24, y: 8)
+                    .shadow(color: Color.maxxPrimary.opacity(0.45), radius: 24, y: 8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
                             .stroke(
                                 LinearGradient(
-                                    colors: [Color(hex: "6C5CE7").opacity(0.5), Color(hex: "00CEC9").opacity(0.3)],
+                                    colors: [Color.maxxPrimary.opacity(0.5), Color.maxxCyan.opacity(0.3)],
                                     startPoint: .topLeading, endPoint: .bottomTrailing
                                 ),
                                 lineWidth: 1
                             )
                     )
+                    .accessibilityLabel("Person with glowing skin representing a glow-up transformation")
             }
             .padding(.horizontal, 24)
             .scaleEffect(animate ? 1.0 : 0.82)
@@ -56,7 +58,7 @@ struct WelcomeView: View {
                 Text("Starts Today")
                     .font(.system(size: 34, weight: .black, design: .rounded))
                     .foregroundStyle(LinearGradient(
-                        colors: [Color(hex: "6C5CE7"), Color(hex: "00CEC9"), Color(hex: "FDCB6E")],
+                        colors: [Color.maxxPrimary, Color.maxxCyan, Color.maxxGold],
                         startPoint: .leading, endPoint: .trailing
                     ))
                     .opacity(animate ? 1 : 0)
@@ -90,7 +92,7 @@ struct WelcomeView: View {
                         .padding(.vertical, 18)
                         .background(Color.maxxGradient)
                         .clipShape(Capsule())
-                        .shadow(color: Color(hex: "6C5CE7").opacity(0.4), radius: 12, y: 4)
+                        .shadow(color: Color.maxxPrimary.opacity(0.4), radius: 12, y: 4)
                 }
 
                 Text("Takes less than 2 minutes")
@@ -119,6 +121,7 @@ struct WelcomeView: View {
                     .font(.footnote)
                     .foregroundColor(.maxxPrimary)
             }
+            .accessibilityHidden(true)
             Text(text)
                 .font(.subheadline)
                 .foregroundColor(.maxxTextSecondary)
@@ -128,5 +131,6 @@ struct WelcomeView: View {
         .opacity(animate ? 1 : 0)
         .offset(x: animate ? 0 : -20)
         .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(delay), value: animate)
+        .accessibilityElement(children: .combine)
     }
 }

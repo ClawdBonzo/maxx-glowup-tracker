@@ -159,7 +159,7 @@ struct HomeView: View {
                     .fontWeight(.black)
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.white, Color(hex: "B040FF")],
+                            colors: [.white, Color.maxxSecondary],
                             startPoint: .leading,
                             endPoint: .trailing
                         )

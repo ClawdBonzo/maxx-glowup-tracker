@@ -28,12 +28,12 @@ struct PaywallView: View {
 
     var body: some View {
         ZStack {
-            // Deep background
-            Color(hex: "08080F").ignoresSafeArea()
+            // Deep background — canonical brand color
+            Color.maxxBackground.ignoresSafeArea()
 
             // Ambient radial glow
             RadialGradient(
-                colors: [Color(hex: "6C5CE7").opacity(0.18), .clear],
+                colors: [Color.maxxPrimary.opacity(0.20), .clear],
                 center: .top, startRadius: 0, endRadius: 420
             )
             .ignoresSafeArea()
@@ -80,6 +80,7 @@ struct PaywallView: View {
                     .background(.white.opacity(0.08))
                     .clipShape(Circle())
             }
+            .accessibilityLabel("Dismiss paywall")
         }
         .padding(.horizontal, 20)
         .padding(.top, 10)
@@ -94,22 +95,23 @@ struct PaywallView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(LinearGradient(
-                        colors: [Color(hex: "6C5CE7"), Color(hex: "00CEC9")],
+                        colors: [Color.maxxPrimary, Color.maxxCyan],
                         startPoint: .topLeading, endPoint: .bottomTrailing
                     ))
                     .frame(width: 52, height: 52)
-                    .shadow(color: Color(hex: "6C5CE7").opacity(0.55), radius: 12, y: 4)
+                    .shadow(color: Color.maxxPrimary.opacity(0.55), radius: 12, y: 4)
 
                 Image(systemName: "sparkles")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.white)
             }
+            .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text("Unlock Maxx Pro")
                     .font(.title3).fontWeight(.black).foregroundColor(.white)
                 Text("Transformation on your terms")
-                    .font(.subheadline).foregroundColor(Color(hex: "A0A0C0"))
+                    .font(.subheadline).foregroundColor(.maxxTextSecondary)
             }
 
             Spacer()
@@ -144,11 +146,11 @@ struct PaywallView: View {
             Image(systemName: icon).font(.system(size: 10, weight: .semibold))
             Text(label).font(.system(size: 11, weight: .semibold))
         }
-        .foregroundColor(Color(hex: "00CEC9"))
+        .foregroundColor(.maxxCyan)
         .padding(.horizontal, 10).padding(.vertical, 6)
-        .background(Color(hex: "00CEC9").opacity(0.1))
+        .background(Color.maxxCyan.opacity(0.10))
         .overlay(
-            Capsule().stroke(Color(hex: "00CEC9").opacity(0.3), lineWidth: 1)
+            Capsule().stroke(Color.maxxCyan.opacity(0.3), lineWidth: 1)
         )
         .clipShape(Capsule())
     }
@@ -207,7 +209,7 @@ struct PaywallView: View {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(isSelected
                           ? (isBest
-                             ? Color(hex: "6C5CE7").opacity(0.18)
+                             ? Color.maxxPrimary.opacity(0.18)
                              : Color.white.opacity(0.07))
                           : Color.white.opacity(0.04))
                     .overlay(
@@ -215,7 +217,7 @@ struct PaywallView: View {
                             .stroke(
                                 isSelected
                                 ? (isBest
-                                   ? LinearGradient(colors: [Color(hex: "6C5CE7"), Color(hex: "00CEC9")],
+                                   ? LinearGradient(colors: [Color.maxxPrimary, Color.maxxCyan],
                                                     startPoint: .leading, endPoint: .trailing)
                                    : LinearGradient(colors: [Color.white.opacity(0.5), Color.white.opacity(0.2)],
                                                     startPoint: .leading, endPoint: .trailing))
@@ -232,14 +234,14 @@ struct PaywallView: View {
                         Circle()
                             .stroke(
                                 isSelected
-                                ? (isBest ? Color(hex: "6C5CE7") : Color.white.opacity(0.7))
+                                ? (isBest ? Color.maxxPrimary : Color.white.opacity(0.7))
                                 : Color.white.opacity(0.2),
                                 lineWidth: 1.5
                             )
                             .frame(width: 20, height: 20)
                         if isSelected {
                             Circle()
-                                .fill(isBest ? Color(hex: "6C5CE7") : Color.white)
+                                .fill(isBest ? Color.maxxPrimary : Color.white)
                                 .frame(width: 11, height: 11)
                                 .transition(.scale.combined(with: .opacity))
                         }
@@ -257,11 +259,11 @@ struct PaywallView: View {
                             if isBest {
                                 Text("BEST VALUE")
                                     .font(.system(size: 8, weight: .heavy))
-                                    .foregroundColor(Color(hex: "08080F"))
+                                    .foregroundColor(.maxxBackground)
                                     .padding(.horizontal, 6).padding(.vertical, 2.5)
                                     .background(
                                         LinearGradient(
-                                            colors: [Color(hex: "FDCB6E"), Color(hex: "F0932B")],
+                                            colors: [Color.maxxGold, Color(hex: "FF8C00")],
                                             startPoint: .leading, endPoint: .trailing
                                         )
                                     )
@@ -272,9 +274,9 @@ struct PaywallView: View {
                             if pid == .yearly && savingsPct > 0 {
                                 Text("SAVE \(savingsPct)%")
                                     .font(.system(size: 8, weight: .heavy))
-                                    .foregroundColor(Color(hex: "08080F"))
+                                    .foregroundColor(.maxxBackground)
                                     .padding(.horizontal, 6).padding(.vertical, 2.5)
-                                    .background(Color(hex: "00CEC9"))
+                                    .background(Color.maxxCyan)
                                     .clipShape(Capsule())
                             }
                         }
@@ -285,23 +287,23 @@ struct PaywallView: View {
                                 HStack(spacing: 4) {
                                     Image(systemName: "gift.fill")
                                         .font(.system(size: 9))
-                                        .foregroundColor(Color(hex: "00B894"))
+                                        .foregroundColor(.maxxCyan)
                                     Text("3-day free trial included")
                                         .font(.caption2)
-                                        .foregroundColor(Color(hex: "00B894"))
+                                        .foregroundColor(.maxxCyan)
                                 }
                             } else if let eq = weeklyEq {
                                 Text("Just \(eq)")
                                     .font(.caption2)
-                                    .foregroundColor(Color(hex: "A0A0C0"))
+                                    .foregroundColor(.maxxTextSecondary)
                             } else if pid == .lifetime {
                                 Text("Pay once · own forever")
                                     .font(.caption2)
-                                    .foregroundColor(Color(hex: "A0A0C0"))
+                                    .foregroundColor(.maxxTextSecondary)
                             } else {
                                 Text("No trial · cancel anytime")
                                     .font(.caption2)
-                                    .foregroundColor(Color(hex: "A0A0C0"))
+                                    .foregroundColor(.maxxTextSecondary)
                             }
                         }
                     }
@@ -317,18 +319,18 @@ struct PaywallView: View {
                             if !period.isEmpty {
                                 Text(period)
                                     .font(.caption2)
-                                    .foregroundColor(Color(hex: "A0A0C0"))
+                                    .foregroundColor(.maxxTextSecondary)
                             }
                         }
                         if pid == .monthly {
                             Text("after trial")
                                 .font(.system(size: 9))
-                                .foregroundColor(Color(hex: "A0A0C0"))
+                                .foregroundColor(.maxxTextSecondary)
                         }
                         if pid == .yearly {
                             Text("after trial")
                                 .font(.system(size: 9))
-                                .foregroundColor(Color(hex: "A0A0C0"))
+                                .foregroundColor(.maxxTextSecondary)
                         }
                     }
                 }
@@ -338,11 +340,11 @@ struct PaywallView: View {
                 if isBest {
                     Text("POPULAR")
                         .font(.system(size: 7, weight: .heavy))
-                        .foregroundColor(Color(hex: "08080F"))
+                        .foregroundColor(.maxxBackground)
                         .padding(.horizontal, 7).padding(.vertical, 3)
                         .background(
                             LinearGradient(
-                                colors: [Color(hex: "6C5CE7"), Color(hex: "00CEC9")],
+                                colors: [Color.maxxPrimary, Color.maxxCyan],
                                 startPoint: .leading, endPoint: .trailing
                             )
                         )
@@ -352,6 +354,21 @@ struct PaywallView: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel(for: pid, price: price, period: period, hasTrial: hasTrial))
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private func accessibilityLabel(
+        for pid: SubscriptionManager.ProductID,
+        price: String,
+        period: String,
+        hasTrial: Bool
+    ) -> String {
+        var parts = [pid.displayName, "\(price)\(period)"]
+        if hasTrial { parts.append("3-day free trial included") }
+        if pid == .monthly { parts.append("Best value") }
+        if pid == .yearly  { parts.append("Save 58 percent") }
+        return parts.joined(separator: ", ")
     }
 
     // MARK: - CTA Section
@@ -377,21 +394,23 @@ struct PaywallView: View {
                 .padding(.vertical, 17)
                 .background(
                     LinearGradient(
-                        colors: [Color(hex: "6C5CE7"), Color(hex: "4A3FD4")],
+                        colors: [Color.maxxPrimary, Color(hex: "6B0FD4")],
                         startPoint: .leading, endPoint: .trailing
                     )
                 )
                 .clipShape(Capsule())
-                .shadow(color: Color(hex: "6C5CE7").opacity(0.45), radius: 14, y: 5)
+                .shadow(color: Color.maxxPrimary.opacity(0.50), radius: 16, y: 6)
             }
             .disabled(isPurchasing)
             .opacity(animate ? 1 : 0)
             .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.38), value: animate)
+            .accessibilityLabel(ctaLabel)
+            .accessibilityHint("Double tap to start your subscription")
 
             // Subtitle below CTA
             Text(ctaSubtitle)
                 .font(.caption)
-                .foregroundColor(Color(hex: "A0A0C0"))
+                .foregroundColor(.maxxTextSecondary)
                 .multilineTextAlignment(.center)
                 .opacity(animate ? 1 : 0)
                 .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.42), value: animate)
@@ -429,16 +448,16 @@ struct PaywallView: View {
         HStack(spacing: 0) {
             Spacer()
             Button("Continue free") { onContinue() }
-            Text(" · ").foregroundColor(Color(hex: "505060"))
+            Text(" · ").foregroundColor(.maxxTextMuted)
             Button("Restore") { Task { await subManager.restorePurchases() } }
-            Text(" · ").foregroundColor(Color(hex: "505060"))
+            Text(" · ").foregroundColor(.maxxTextMuted)
             Button("Terms") { }
-            Text(" · ").foregroundColor(Color(hex: "505060"))
+            Text(" · ").foregroundColor(.maxxTextMuted)
             Button("Privacy") { }
             Spacer()
         }
         .font(.system(size: 11))
-        .foregroundColor(Color(hex: "505060"))
+        .foregroundColor(.maxxTextMuted)
         .padding(.top, 10)
         .opacity(animate ? 1 : 0)
         .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.46), value: animate)
@@ -454,13 +473,13 @@ struct PaywallView: View {
                 Circle()
                     .stroke(
                         LinearGradient(
-                            colors: [Color(hex: "6C5CE7"), Color(hex: "00CEC9"), Color(hex: "FDCB6E")],
+                            colors: [Color.maxxPrimary, Color.maxxCyan, Color.maxxGold],
                             startPoint: .topLeading, endPoint: .bottomTrailing
                         ),
                         lineWidth: 3.5
                     )
                     .frame(width: 156, height: 156)
-                    .shadow(color: Color(hex: "00CEC9").opacity(0.55), radius: 28)
+                    .shadow(color: Color.maxxCyan.opacity(0.55), radius: 28)
 
                 Image("MaxxLogo")
                     .resizable().aspectRatio(contentMode: .fit)
@@ -469,35 +488,38 @@ struct PaywallView: View {
             }
             .scaleEffect(showCelebration ? 1 : 0.25)
             .animation(.spring(response: 0.6, dampingFraction: 0.6), value: showCelebration)
+            .accessibilityHidden(true)
 
             VStack(spacing: 6) {
                 Text("Welcome to Maxx Pro!")
                     .font(.title2).fontWeight(.black)
                     .foregroundStyle(LinearGradient(
-                        colors: [Color(hex: "6C5CE7"), Color(hex: "00CEC9"), Color(hex: "FDCB6E")],
+                        colors: [Color.maxxPrimary, Color.maxxCyan, Color.maxxGold],
                         startPoint: .leading, endPoint: .trailing
                     ))
                 Text("Your full glow-up journey starts now")
-                    .font(.subheadline).foregroundColor(Color(hex: "A0A0C0"))
+                    .font(.subheadline).foregroundColor(.maxxTextSecondary)
             }
             .opacity(showCelebration ? 1 : 0)
             .offset(y: showCelebration ? 0 : 18)
             .animation(.spring(response: 0.6).delay(0.3), value: showCelebration)
+            .accessibilityElement(children: .combine)
 
             Image(systemName: "crown.fill")
                 .font(.system(size: 46))
                 .foregroundStyle(LinearGradient(
-                    colors: [Color(hex: "FDCB6E"), Color(hex: "F0932B")],
+                    colors: [Color.maxxGold, Color(hex: "FF8C00")],
                     startPoint: .top, endPoint: .bottom
                 ))
                 .opacity(showCelebration ? 1 : 0)
                 .scaleEffect(showCelebration ? 1 : 0.4)
                 .animation(.spring(response: 0.5).delay(0.5), value: showCelebration)
+                .accessibilityHidden(true)
 
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(hex: "08080F").ignoresSafeArea())
+        .background(Color.maxxBackground.ignoresSafeArea())
         .transition(.opacity)
     }
 
