@@ -6,6 +6,8 @@ import RevenueCat
 struct MaxxGlowUpApp: App {
     @State private var subscriptionManager = SubscriptionManager.shared
 
+    let modelContainer: ModelContainer
+
     init() {
         // Configure RevenueCat SDK.
         // Key "appl_TlXDHfbMGnSrHUfrInSbSaENgvS" is the PRODUCTION public SDK key
@@ -20,14 +22,11 @@ struct MaxxGlowUpApp: App {
 
         // Start subscription manager (sets delegate, fetches offerings + entitlements)
         SubscriptionManager.shared.start()
-    }
 
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-                .environment(subscriptionManager)
-        }
-        .modelContainer(for: [
+        // Create SwiftData model container with migration-safe fallback.
+        // If the store is corrupted (e.g. schema change from dev builds),
+        // delete and recreate rather than crashing on launch.
+        let schema = Schema([
             UserProfile.self,
             ProgressPhoto.self,
             DailyLog.self,
@@ -36,5 +35,34 @@ struct MaxxGlowUpApp: App {
             Quest.self,
             Badge.self,
         ])
+
+        do {
+            let config = ModelConfiguration(schema: schema)
+            modelContainer = try ModelContainer(for: schema, configurations: [config])
+        } catch {
+            // Store corrupted — wipe and recreate
+            print("[MaxxApp] SwiftData migration failed, recreating store: \(error)")
+            let config = ModelConfiguration(schema: schema)
+            // Delete the old store file
+            let url = config.url
+            try? FileManager.default.removeItem(at: url)
+            // Also remove WAL/SHM
+            try? FileManager.default.removeItem(at: url.appendingPathExtension("wal"))
+            try? FileManager.default.removeItem(at: url.appendingPathExtension("shm"))
+            // Retry — if this also fails, we truly can't recover
+            do {
+                modelContainer = try ModelContainer(for: schema, configurations: [config])
+            } catch {
+                fatalError("[MaxxApp] Cannot create SwiftData store even after reset: \(error)")
+            }
+        }
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .environment(subscriptionManager)
+        }
+        .modelContainer(modelContainer)
     }
 }
