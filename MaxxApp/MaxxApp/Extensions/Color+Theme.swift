@@ -1,47 +1,54 @@
 import SwiftUI
 
 extension Color {
-    // MARK: - Primary Brand Colors
-    static let maxxPrimary = Color(hex: "6C5CE7")
-    static let maxxSecondary = Color(hex: "A29BFE")
-    static let maxxAccent = Color(hex: "FD79A8")
-    static let maxxGold = Color(hex: "FDCB6E")
+    // MARK: - Primary Brand Colors (Neon Palette)
+    static let maxxPrimary   = Color(hex: "8B00FF")   // Neon violet
+    static let maxxCyan      = Color(hex: "00F0FF")   // Electric cyan
+    static let maxxGold      = Color(hex: "FFD700")   // Hot gold
+    static let maxxSecondary = Color(hex: "B040FF")   // Lighter violet
+    static let maxxAccent    = Color(hex: "FF3CAC")   // Electric magenta/pink
 
     // MARK: - Background
-    static let maxxBackground = Color(hex: "0A0A0F")
-    static let maxxSurface = Color(hex: "1A1A2E")
-    static let maxxSurfaceLight = Color(hex: "25253D")
-    static let maxxCard = Color(hex: "16213E")
+    static let maxxBackground   = Color(hex: "08080F")
+    static let maxxSurface      = Color(hex: "10101E")
+    static let maxxSurfaceLight = Color(hex: "1C1C30")
+    static let maxxCard         = Color(hex: "14142A")
 
     // MARK: - Text
-    static let maxxTextPrimary = Color.white
-    static let maxxTextSecondary = Color(hex: "B2BEC3")
-    static let maxxTextMuted = Color(hex: "636E72")
+    static let maxxTextPrimary   = Color.white
+    static let maxxTextSecondary = Color(hex: "C0B8D8")
+    static let maxxTextMuted     = Color(hex: "6B6890")
 
     // MARK: - Status
-    static let maxxSuccess = Color(hex: "00B894")
-    static let maxxWarning = Color(hex: "FDCB6E")
-    static let maxxError = Color(hex: "E17055")
+    static let maxxSuccess = Color(hex: "00FFB2")   // Neon green
+    static let maxxWarning = Color(hex: "FFD700")   // Hot gold
+    static let maxxError   = Color(hex: "FF3860")   // Electric red
 
-    // MARK: - Category Colors
-    static let skinColor = Color(hex: "74B9FF")
-    static let hairColor = Color(hex: "A29BFE")
-    static let fitnessColor = Color(hex: "FF7675")
-    static let faceColor = Color(hex: "FD79A8")
-    static let styleColor = Color(hex: "FDCB6E")
-    static let groomingColor = Color(hex: "00CEC9")
-    static let postureColor = Color(hex: "55EFC4")
-    static let teethColor = Color(hex: "FFEAA7")
+    // MARK: - Category Colors (vibrant neon)
+    static let skinColor     = Color(hex: "00F0FF")  // Electric cyan
+    static let hairColor     = Color(hex: "B040FF")  // Neon violet
+    static let fitnessColor  = Color(hex: "FF3CAC")  // Electric magenta
+    static let faceColor     = Color(hex: "FFD700")  // Hot gold
+    static let styleColor    = Color(hex: "FF6B35")  // Electric orange
+    static let groomingColor = Color(hex: "00FFB2")  // Neon green
+    static let postureColor  = Color(hex: "40E0FF")  // Bright cyan
+    static let teethColor    = Color(hex: "FFFFFF")  // Pure white
 
-    // MARK: - Gradients
+    // MARK: - Core Gradients
     static let maxxGradient = LinearGradient(
-        colors: [maxxPrimary, maxxAccent],
+        colors: [maxxPrimary, maxxCyan],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    static let maxxTriGradient = LinearGradient(
+        colors: [maxxPrimary, maxxCyan, maxxGold],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
     static let maxxGoldGradient = LinearGradient(
-        colors: [Color(hex: "F9CA24"), Color(hex: "F0932B")],
+        colors: [Color(hex: "FFD700"), Color(hex: "FF8C00")],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
@@ -51,6 +58,12 @@ extension Color {
         startPoint: .top,
         endPoint: .bottom
     )
+
+    // MARK: - Neon Glow Colors (for shadow effects)
+    static let neonVioletGlow = Color(hex: "8B00FF")
+    static let neonCyanGlow   = Color(hex: "00F0FF")
+    static let neonGoldGlow   = Color(hex: "FFD700")
+    static let neonPinkGlow   = Color(hex: "FF3CAC")
 
     // MARK: - Hex Initializer
     init(hex: String) {
@@ -79,14 +92,14 @@ extension Color {
 
     static func categoryColor(for category: GlowUpCategory) -> Color {
         switch category {
-        case .skin: .skinColor
-        case .hair: .hairColor
-        case .fitness: .fitnessColor
+        case .skin:          .skinColor
+        case .hair:          .hairColor
+        case .fitness:       .fitnessColor
         case .faceStructure: .faceColor
-        case .style: .styleColor
-        case .grooming: .groomingColor
-        case .posture: .postureColor
-        case .teeth: .teethColor
+        case .style:         .styleColor
+        case .grooming:      .groomingColor
+        case .posture:       .postureColor
+        case .teeth:         .teethColor
         }
     }
 }

@@ -13,21 +13,25 @@ struct HomeView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 24) {
-                    headerSection
-                    if let vm = gamificationVM {
-                        gamificationProgressSection(viewModel: vm)
+            ZStack {
+                // Neon ambient background with particles
+                NeonScreenBackground(particleCount: 18)
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 22) {
+                        headerSection
+                        if let vm = gamificationVM {
+                            gamificationProgressSection(viewModel: vm)
+                        }
+                        glowScoreSection
+                        todayRoutinesSection
+                        streakSection
+                        quoteSection
                     }
-                    glowScoreSection
-                    todayRoutinesSection
-                    streakSection
-                    quoteSection
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 100)
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 100)
             }
-            .background(Color.maxxBackground)
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 viewModel.loadToday(modelContext: modelContext)
@@ -50,47 +54,85 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(level.emoji)
                         .font(.title)
+                        .neonGlow(color: .maxxPrimary, radius: 10)
                     Text(level.displayName)
                         .font(.caption)
-                        .foregroundColor(.maxxTextSecondary)
+                        .fontWeight(.bold)
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.maxxCyan, .maxxPrimary],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
                 }
-                .frame(width: 50)
+                .frame(width: 60)
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text("\(viewModel.gamificationState.totalXP) XP")
                             .font(.subheadline)
-                            .fontWeight(.semibold)
+                            .fontWeight(.bold)
                             .foregroundColor(.white)
                         Spacer()
                         Text("\(Int(progress * 100))%")
                             .font(.caption2)
-                            .foregroundColor(.maxxTextMuted)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.maxxCyan)
                     }
 
+                    // Neon XP progress bar
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
                             Capsule()
                                 .fill(Color.maxxSurfaceLight)
+                                .frame(height: 8)
 
+                            // Glow bloom
                             Capsule()
-                                .fill(Color(hex: "00CEC9"))
-                                .frame(width: geo.size.width * progress)
-                                .animation(.easeInOut(duration: 0.3), value: progress)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.maxxPrimary, .maxxCyan, .maxxGold],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(width: geo.size.width * max(progress, 0.03), height: 8)
+                                .blur(radius: 6)
+                                .opacity(0.7)
+
+                            // Sharp bar
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.maxxPrimary, .maxxCyan, .maxxGold],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(width: geo.size.width * max(progress, 0.03), height: 8)
                         }
+                        .animation(.spring(response: 0.6), value: progress)
                     }
-                    .frame(height: 6)
+                    .frame(height: 8)
                 }
 
                 VStack(alignment: .trailing, spacing: 4) {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 3) {
                         Image(systemName: "flame.fill")
                             .font(.caption)
+                            .neonGlow(color: .maxxAccent, radius: 6)
                         Text("\(viewModel.gamificationState.currentStreak)")
                             .font(.subheadline)
-                            .fontWeight(.semibold)
+                            .fontWeight(.black)
                     }
-                    .foregroundColor(.maxxAccent)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.maxxAccent, .maxxGold],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
 
                     Text("streak")
                         .font(.caption2)
@@ -100,7 +142,7 @@ struct HomeView: View {
             }
         }
         .padding(16)
-        .maxxCard()
+        .neonCard(cornerRadius: 20, glowColor: .maxxPrimary)
     }
 
     // MARK: - Header
@@ -114,8 +156,14 @@ struct HomeView: View {
 
                 Text("Day \(profile?.daysSinceJoined ?? 0) of your glow-up")
                     .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
+                    .fontWeight(.black)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.white, Color(hex: "B040FF")],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
             }
 
             Spacer()
@@ -124,9 +172,23 @@ struct HomeView: View {
                 Button {
                     showDailyCheckIn = true
                 } label: {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title)
-                        .foregroundStyle(Color.maxxGradient)
+                    ZStack {
+                        Circle()
+                            .fill(Color.maxxPrimary.opacity(0.15))
+                            .frame(width: 42, height: 42)
+                            .neonGlow(color: .maxxPrimary, radius: 8)
+
+                        Image(systemName: "plus")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.maxxPrimary, .maxxCyan],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                    }
                 }
 
                 Image("MaxxLogo")
@@ -134,6 +196,7 @@ struct HomeView: View {
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 36, height: 36)
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .neonGlow(color: .maxxPrimary, radius: 6)
             }
         }
         .padding(.top, 16)
@@ -153,11 +216,18 @@ struct HomeView: View {
 
             Text("Today's Glow Score")
                 .font(.subheadline)
-                .foregroundColor(.maxxTextSecondary)
+                .fontWeight(.semibold)
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.maxxCyan, .maxxPrimary],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)
-        .maxxCard()
+        .neonCard(cornerRadius: 24, glowColor: .maxxCyan)
     }
 
     // MARK: - Today's Routines
@@ -167,6 +237,7 @@ struct HomeView: View {
             HStack {
                 Text("Today's Routines")
                     .font(.headline)
+                    .fontWeight(.bold)
                     .foregroundColor(.white)
 
                 Spacer()
@@ -175,8 +246,14 @@ struct HomeView: View {
                 let completed = scheduled.filter(\.isCompletedToday).count
                 Text("\(completed)/\(scheduled.count)")
                     .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.maxxPrimary)
+                    .fontWeight(.black)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.maxxPrimary, .maxxCyan],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
             }
 
             let todayRoutines = routines.filter { $0.isActive && $0.isScheduledToday }
@@ -196,13 +273,13 @@ struct HomeView: View {
             }
         }
         .padding(20)
-        .maxxCard()
+        .neonCard(cornerRadius: 20, glowColor: .maxxPrimary)
     }
 
     // MARK: - Streak
 
     private var streakSection: some View {
-        HStack(spacing: 20) {
+        HStack(spacing: 14) {
             StreakBadgeView(
                 count: profile?.currentStreak ?? 0,
                 label: "Current",
@@ -221,7 +298,7 @@ struct HomeView: View {
                 count: profile?.totalCheckIns ?? 0,
                 label: "Total",
                 icon: "checkmark.seal.fill",
-                color: .maxxSuccess
+                color: .maxxCyan
             )
         }
     }
@@ -232,7 +309,14 @@ struct HomeView: View {
         VStack(spacing: 12) {
             Image(systemName: "quote.opening")
                 .font(.title3)
-                .foregroundColor(.maxxPrimary)
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.maxxPrimary, .maxxCyan],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .neonGlow(color: .maxxPrimary, radius: 6)
 
             Text(viewModel.motivationalQuote)
                 .font(.subheadline)
@@ -242,7 +326,7 @@ struct HomeView: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity)
-        .maxxCard()
+        .neonCard(cornerRadius: 20, glowColor: .maxxGold)
     }
 
     // MARK: - Actions
@@ -253,8 +337,6 @@ struct HomeView: View {
         } else {
             routine.markCompleted()
             profile?.updateStreak()
-
-            // Award XP for routine completion
             let xpReward = 25 + (routine.durationMinutes / 5)
             gamificationVM?.addXP(xpReward, reason: "Routine: \(routine.name)")
         }
@@ -268,23 +350,44 @@ struct HomeView: View {
 struct RoutineRowView: View {
     let routine: Routine
     let onToggle: () -> Void
+    @State private var didComplete = false
 
     var body: some View {
         HStack(spacing: 14) {
             Button {
                 withAnimation(.spring(response: 0.3)) {
                     onToggle()
+                    if !routine.isCompletedToday { didComplete = true }
                 }
             } label: {
-                Image(systemName: routine.isCompletedToday ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
-                    .foregroundColor(routine.isCompletedToday ? .maxxSuccess : .maxxTextMuted)
+                ZStack {
+                    Circle()
+                        .fill(
+                            routine.isCompletedToday
+                                ? AnyShapeStyle(LinearGradient(
+                                    colors: [.maxxPrimary, .maxxCyan],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ))
+                                : AnyShapeStyle(Color.maxxSurfaceLight)
+                        )
+                        .frame(width: 32, height: 32)
+
+                    Image(systemName: routine.isCompletedToday ? "checkmark" : "circle")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                }
+                .neonGlow(
+                    color: routine.isCompletedToday ? .maxxCyan : .clear,
+                    radius: 8
+                )
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(routine.name)
                     .font(.subheadline)
-                    .fontWeight(.medium)
+                    .fontWeight(.semibold)
                     .foregroundColor(routine.isCompletedToday ? .maxxTextSecondary : .white)
                     .strikethrough(routine.isCompletedToday)
 
@@ -292,9 +395,9 @@ struct RoutineRowView: View {
                     if let category = routine.parsedCategory {
                         Text(category.rawValue)
                             .font(.caption2)
+                            .fontWeight(.semibold)
                             .foregroundColor(Color.categoryColor(for: category))
                     }
-
                     Text("\(routine.durationMinutes) min")
                         .font(.caption2)
                         .foregroundColor(.maxxTextMuted)
@@ -307,11 +410,18 @@ struct RoutineRowView: View {
                 HStack(spacing: 2) {
                     Image(systemName: "flame.fill")
                         .font(.caption2)
+                        .neonGlow(color: .maxxAccent, radius: 4)
                     Text("\(routine.currentStreak)")
                         .font(.caption2)
-                        .fontWeight(.bold)
+                        .fontWeight(.black)
                 }
-                .foregroundColor(.maxxAccent)
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.maxxAccent, .maxxGold],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
             }
         }
         .padding(.vertical, 4)
@@ -333,30 +443,32 @@ struct DailyCheckInSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 28) {
-                    ratingSection(title: "Overall Mood", rating: $mood, icon: "face.smiling")
-                    ratingSection(title: "Skin Today", rating: $skinRating, icon: "drop.fill")
-                    ratingSection(title: "Confidence", rating: $confidenceRating, icon: "star.fill")
+            ZStack {
+                NeonScreenBackground(particleCount: 10)
+                ScrollView {
+                    VStack(spacing: 28) {
+                        ratingSection(title: "Overall Mood", rating: $mood, icon: "face.smiling", color: .maxxGold)
+                        ratingSection(title: "Skin Today", rating: $skinRating, icon: "drop.fill", color: .maxxCyan)
+                        ratingSection(title: "Confidence", rating: $confidenceRating, icon: "star.fill", color: .maxxPrimary)
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Journal (optional)")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Journal (optional)")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
 
-                        TextEditor(text: $journalEntry)
-                            .frame(minHeight: 100)
-                            .scrollContentBackground(.hidden)
-                            .padding(12)
-                            .background(Color.maxxSurface)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .foregroundColor(.white)
+                            TextEditor(text: $journalEntry)
+                                .frame(minHeight: 100)
+                                .scrollContentBackground(.hidden)
+                                .padding(12)
+                                .background(Color.maxxSurface)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .foregroundColor(.white)
+                        }
                     }
+                    .padding(20)
                 }
-                .padding(20)
             }
-            .background(Color.maxxBackground)
             .navigationTitle("Daily Check-In")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -369,8 +481,14 @@ struct DailyCheckInSheet: View {
                         saveCheckIn()
                         dismiss()
                     }
-                    .fontWeight(.bold)
-                    .foregroundColor(.maxxPrimary)
+                    .fontWeight(.black)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.maxxPrimary, .maxxCyan],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
                 }
             }
         }
@@ -378,11 +496,12 @@ struct DailyCheckInSheet: View {
         .preferredColorScheme(.dark)
     }
 
-    private func ratingSection(title: String, rating: Binding<Int>, icon: String) -> some View {
+    private func ratingSection(title: String, rating: Binding<Int>, icon: String, color: Color) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: icon)
-                    .foregroundColor(.maxxPrimary)
+                    .foregroundColor(color)
+                    .neonGlow(color: color, radius: 6)
                 Text(title)
                     .font(.subheadline)
                     .fontWeight(.semibold)
@@ -395,15 +514,29 @@ struct DailyCheckInSheet: View {
                         rating.wrappedValue = value
                         HapticService.selection()
                     } label: {
-                        Circle()
-                            .fill(value <= rating.wrappedValue ? Color.maxxPrimary : Color.maxxSurfaceLight)
-                            .frame(width: 44, height: 44)
-                            .overlay(
-                                Text("\(value)")
-                                    .font(.subheadline)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white)
-                            )
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    value <= rating.wrappedValue
+                                        ? AnyShapeStyle(LinearGradient(
+                                            colors: [color, color.opacity(0.6)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ))
+                                        : AnyShapeStyle(Color.maxxSurfaceLight)
+                                )
+                                .frame(width: 44, height: 44)
+                                .neonGlow(
+                                    color: value <= rating.wrappedValue ? color : .clear,
+                                    radius: 6,
+                                    intensity: value <= rating.wrappedValue ? 0.8 : 0
+                                )
+
+                            Text("\(value)")
+                                .font(.subheadline)
+                                .fontWeight(.black)
+                                .foregroundColor(.white)
+                        }
                     }
                 }
             }
@@ -418,11 +551,9 @@ struct DailyCheckInSheet: View {
         log.journalEntry = journalEntry
         try? modelContext.save()
 
-        // Award XP for daily check-in
         let baseXP = 50
-        let bonusXP = (mood + skinRating + confidenceRating) / 3 - 3 // Bonus for higher ratings
+        let bonusXP = (mood + skinRating + confidenceRating) / 3 - 3
         gamificationVM?.addXP(baseXP + max(0, bonusXP * 5), reason: "Daily check-in")
-
         HapticService.success()
     }
 }

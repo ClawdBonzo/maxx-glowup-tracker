@@ -8,32 +8,39 @@ struct ProgressGalleryView: View {
     @State private var viewModel = ProgressViewModel()
     @State private var gamificationVM: GamificationViewModel?
     @State private var showAddSheet = false
+    @State private var showMirrorMode = false
 
     private let columns = [
-        GridItem(.flexible(), spacing: 4),
-        GridItem(.flexible(), spacing: 4),
-        GridItem(.flexible(), spacing: 4),
+        GridItem(.flexible(), spacing: 3),
+        GridItem(.flexible(), spacing: 3),
+        GridItem(.flexible(), spacing: 3),
     ]
 
     var body: some View {
         NavigationStack {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 20) {
-                    // Category filter
-                    categoryFilter
+            ZStack {
+                NeonScreenBackground(particleCount: 14)
 
-                    // Photo grid
-                    let filtered = viewModel.photosForCategory(viewModel.selectedCategory, allPhotos: photos)
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 20) {
+                        // Mirror Mode banner
+                        mirrorModeBanner
 
-                    if filtered.isEmpty {
-                        emptyState
-                    } else {
-                        photoGrid(filtered)
+                        // Category filter
+                        categoryFilter
+
+                        // Photo grid
+                        let filtered = viewModel.photosForCategory(viewModel.selectedCategory, allPhotos: photos)
+
+                        if filtered.isEmpty {
+                            emptyState
+                        } else {
+                            photoGrid(filtered)
+                        }
                     }
+                    .padding(.bottom, 100)
                 }
-                .padding(.bottom, 100)
             }
-            .background(Color.maxxBackground)
             .navigationTitle("Progress")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -43,20 +50,35 @@ struct ProgressGalleryView: View {
                             PhotoCompareView(photos: photos)
                         } label: {
                             Image(systemName: "rectangle.on.rectangle")
-                                .foregroundColor(.maxxPrimary)
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [.maxxPrimary, .maxxCyan],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
                         }
 
                         Button {
                             showAddSheet = true
                         } label: {
                             Image(systemName: "camera.fill")
-                                .foregroundColor(.maxxPrimary)
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [.maxxPrimary, .maxxCyan],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
                         }
                     }
                 }
             }
             .sheet(isPresented: $showAddSheet) {
                 AddPhotoSheet(viewModel: viewModel, gamificationVM: gamificationVM)
+            }
+            .fullScreenCover(isPresented: $showMirrorMode) {
+                MirrorModeView()
             }
             .onAppear {
                 if gamificationVM == nil {
@@ -66,6 +88,66 @@ struct ProgressGalleryView: View {
             .sheet(item: $viewModel.selectedPhoto) { photo in
                 PhotoDetailSheet(photo: photo, viewModel: viewModel)
             }
+        }
+    }
+
+    // MARK: - Mirror Mode Banner
+
+    private var mirrorModeBanner: some View {
+        Button {
+            showMirrorMode = true
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color.maxxPrimary.opacity(0.15))
+                        .frame(width: 48, height: 48)
+                        .neonGlow(color: .maxxPrimary, radius: 8)
+
+                    Image(systemName: "camera.filters")
+                        .font(.title3)
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.maxxPrimary, .maxxCyan],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 6) {
+                        Text("Mirror Mode")
+                            .font(.headline)
+                            .fontWeight(.black)
+                            .foregroundColor(.white)
+
+                        Text("NEW")
+                            .font(.system(size: 9, weight: .black))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.maxxGold)
+                            .clipShape(Capsule())
+                            .neonGlow(color: .maxxGold, radius: 4)
+                    }
+
+                    Text("Golden ratio grid • Real-time alignment")
+                        .font(.caption)
+                        .foregroundColor(.maxxTextSecondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.maxxTextMuted)
+            }
+            .padding(16)
+            .neonCard(cornerRadius: 18, glowColor: .maxxPrimary)
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
         }
     }
 
@@ -95,19 +177,32 @@ struct ProgressGalleryView: View {
         Button(action: action) {
             Text(label)
                 .font(.caption)
-                .fontWeight(.semibold)
+                .fontWeight(.bold)
                 .foregroundColor(isSelected ? .white : .maxxTextSecondary)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-                .background(isSelected ? Color.maxxPrimary : Color.maxxSurface)
+                .background(
+                    isSelected
+                        ? AnyShapeStyle(LinearGradient(
+                            colors: [.maxxPrimary, .maxxCyan],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ))
+                        : AnyShapeStyle(Color.maxxSurface)
+                )
                 .clipShape(Capsule())
+                .overlay(
+                    Capsule()
+                        .stroke(isSelected ? Color.maxxCyan.opacity(0.5) : Color.white.opacity(0.06), lineWidth: 1)
+                )
+                .shadow(color: isSelected ? Color.maxxPrimary.opacity(0.4) : .clear, radius: 6)
         }
     }
 
     // MARK: - Photo Grid
 
     private func photoGrid(_ filteredPhotos: [ProgressPhoto]) -> some View {
-        LazyVGrid(columns: columns, spacing: 4) {
+        LazyVGrid(columns: columns, spacing: 3) {
             ForEach(filteredPhotos) { photo in
                 Button {
                     viewModel.selectedPhoto = photo
@@ -116,7 +211,20 @@ struct ProgressGalleryView: View {
                 }
             }
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, 3)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [.maxxPrimary.opacity(0.3), .maxxCyan.opacity(0.15)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+        )
+        .padding(.horizontal, 3)
     }
 
     private func photoThumbnail(_ photo: ProgressPhoto) -> some View {
@@ -147,6 +255,7 @@ struct ProgressGalleryView: View {
                 Image(systemName: "heart.fill")
                     .font(.caption2)
                     .foregroundColor(.maxxAccent)
+                    .neonGlow(color: .maxxAccent, radius: 4)
                     .padding(6)
             }
         }
@@ -156,7 +265,7 @@ struct ProgressGalleryView: View {
                 .foregroundColor(.white)
                 .padding(.horizontal, 4)
                 .padding(.vertical, 2)
-                .background(.black.opacity(0.5))
+                .background(.black.opacity(0.55))
                 .clipShape(Capsule())
                 .padding(4)
         }
@@ -165,13 +274,27 @@ struct ProgressGalleryView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "camera.fill")
-                .font(.system(size: 48))
-                .foregroundColor(.maxxTextMuted)
+        VStack(spacing: 20) {
+            ZStack {
+                Circle()
+                    .fill(Color.maxxPrimary.opacity(0.10))
+                    .frame(width: 90, height: 90)
+                    .neonGlow(color: .maxxPrimary, radius: 14)
+
+                Image(systemName: "camera.fill")
+                    .font(.system(size: 36))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.maxxPrimary, .maxxCyan],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
 
             Text("No progress photos yet")
                 .font(.headline)
+                .fontWeight(.bold)
                 .foregroundColor(.maxxTextSecondary)
 
             Text("Take your first photo to start tracking your glow-up")
@@ -184,12 +307,19 @@ struct ProgressGalleryView: View {
             } label: {
                 Text("Add Photo")
                     .font(.subheadline)
-                    .fontWeight(.bold)
+                    .fontWeight(.black)
                     .foregroundColor(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color.maxxGradient)
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 14)
+                    .background(
+                        LinearGradient(
+                            colors: [.maxxPrimary, .maxxCyan],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
                     .clipShape(Capsule())
+                    .neonGlow(color: .maxxPrimary, radius: 10)
             }
         }
         .padding(40)
@@ -212,112 +342,162 @@ struct AddPhotoSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Photo picker
-                    PhotosPicker(selection: $selectedItem, matching: .images) {
-                        if let data = selectedImageData, let uiImage = UIImage(data: data) {
-                            Image(uiImage: uiImage)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(height: 300)
-                                .clipShape(RoundedRectangle(cornerRadius: 16))
-                        } else {
-                            VStack(spacing: 12) {
-                                Image(systemName: "photo.badge.plus")
-                                    .font(.system(size: 40))
-                                    .foregroundColor(.maxxPrimary)
+            ZStack {
+                NeonScreenBackground(particleCount: 8)
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Photo picker
+                        PhotosPicker(selection: $selectedItem, matching: .images) {
+                            if let data = selectedImageData, let uiImage = UIImage(data: data) {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(height: 300)
+                                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(
+                                                LinearGradient(
+                                                    colors: [.maxxPrimary, .maxxCyan],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                ),
+                                                lineWidth: 2
+                                            )
+                                    )
+                                    .neonGlow(color: .maxxPrimary, radius: 8)
+                            } else {
+                                VStack(spacing: 12) {
+                                    Image(systemName: "photo.badge.plus")
+                                        .font(.system(size: 40))
+                                        .foregroundStyle(
+                                            LinearGradient(
+                                                colors: [.maxxPrimary, .maxxCyan],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .neonGlow(color: .maxxPrimary, radius: 10)
 
-                                Text("Select a Photo")
-                                    .font(.subheadline)
-                                    .foregroundColor(.maxxTextSecondary)
+                                    Text("Select a Photo")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.maxxTextSecondary)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 200)
+                                .neonCard(cornerRadius: 16, glowColor: .maxxPrimary)
                             }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 200)
-                            .background(Color.maxxSurface)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
                         }
-                    }
-                    .onChange(of: selectedItem) { _, newItem in
-                        Task {
-                            if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                                selectedImageData = data
+                        .onChange(of: selectedItem) { _, newItem in
+                            Task {
+                                if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                                    selectedImageData = data
+                                }
                             }
                         }
-                    }
 
-                    // Category picker
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Category")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
+                        // Category
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Category")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
 
-                        ScrollView(.horizontal, showsIndicators: false) {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 10) {
+                                    ForEach(GlowUpCategory.allCases) { category in
+                                        Button {
+                                            selectedCategory = category
+                                        } label: {
+                                            Text(category.rawValue)
+                                                .font(.caption)
+                                                .fontWeight(.bold)
+                                                .foregroundColor(selectedCategory == category ? .white : .maxxTextSecondary)
+                                                .padding(.horizontal, 14)
+                                                .padding(.vertical, 8)
+                                                .background(
+                                                    selectedCategory == category
+                                                        ? AnyShapeStyle(LinearGradient(
+                                                            colors: [
+                                                                Color.categoryColor(for: category),
+                                                                Color.categoryColor(for: category).opacity(0.7),
+                                                            ],
+                                                            startPoint: .topLeading,
+                                                            endPoint: .bottomTrailing
+                                                        ))
+                                                        : AnyShapeStyle(Color.maxxSurface)
+                                                )
+                                                .clipShape(Capsule())
+                                                .neonGlow(
+                                                    color: selectedCategory == category ? Color.categoryColor(for: category) : .clear,
+                                                    radius: 5,
+                                                    intensity: 0.6
+                                                )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Angle
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Angle")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+
                             HStack(spacing: 10) {
-                                ForEach(GlowUpCategory.allCases) { category in
+                                ForEach(PhotoAngle.allCases, id: \.self) { angle in
                                     Button {
-                                        selectedCategory = category
+                                        selectedAngle = angle
                                     } label: {
-                                        Text(category.rawValue)
-                                            .font(.caption)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(selectedCategory == category ? .white : .maxxTextSecondary)
-                                            .padding(.horizontal, 14)
-                                            .padding(.vertical, 8)
-                                            .background(selectedCategory == category ? Color.categoryColor(for: category) : Color.maxxSurface)
-                                            .clipShape(Capsule())
+                                        VStack(spacing: 4) {
+                                            Image(systemName: angle.icon)
+                                            Text(angle.rawValue)
+                                                .font(.caption2)
+                                        }
+                                        .foregroundColor(selectedAngle == angle ? .white : .maxxTextSecondary)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(
+                                            selectedAngle == angle
+                                                ? AnyShapeStyle(LinearGradient(
+                                                    colors: [.maxxPrimary, .maxxCyan],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                ))
+                                                : AnyShapeStyle(Color.maxxSurface)
+                                        )
+                                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                                        .neonGlow(color: selectedAngle == angle ? .maxxPrimary : .clear, radius: 6)
                                     }
                                 }
                             }
                         }
-                    }
 
-                    // Angle picker
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Angle")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
+                        // Note
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Note (optional)")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
 
-                        HStack(spacing: 10) {
-                            ForEach(PhotoAngle.allCases, id: \.self) { angle in
-                                Button {
-                                    selectedAngle = angle
-                                } label: {
-                                    VStack(spacing: 4) {
-                                        Image(systemName: angle.icon)
-                                        Text(angle.rawValue)
-                                            .font(.caption2)
-                                    }
-                                    .foregroundColor(selectedAngle == angle ? .white : .maxxTextSecondary)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .background(selectedAngle == angle ? Color.maxxPrimary : Color.maxxSurface)
-                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                                }
-                            }
+                            TextField("How are you feeling about your progress?", text: $note, axis: .vertical)
+                                .textFieldStyle(.plain)
+                                .padding(12)
+                                .background(Color.maxxSurface)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .foregroundColor(.white)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.maxxPrimary.opacity(0.3), lineWidth: 1)
+                                )
                         }
                     }
-
-                    // Note
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Note (optional)")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-
-                        TextField("How are you feeling about your progress?", text: $note, axis: .vertical)
-                            .textFieldStyle(.plain)
-                            .padding(12)
-                            .background(Color.maxxSurface)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .foregroundColor(.white)
-                    }
+                    .padding(20)
                 }
-                .padding(20)
             }
-            .background(Color.maxxBackground)
             .navigationTitle("Add Progress Photo")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -329,8 +509,14 @@ struct AddPhotoSheet: View {
                     Button("Save") {
                         savePhoto()
                     }
-                    .fontWeight(.bold)
-                    .foregroundColor(.maxxPrimary)
+                    .fontWeight(.black)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.maxxPrimary, .maxxCyan],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
                     .disabled(selectedImageData == nil)
                 }
             }
@@ -357,53 +543,68 @@ struct PhotoDetailSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    if let uiImage = UIImage(data: photo.imageData) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                    }
-
-                    HStack {
-                        if let category = photo.parsedCategory {
-                            Label(category.rawValue, systemImage: category.icon)
-                                .font(.caption)
-                                .foregroundColor(Color.categoryColor(for: category))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(Color.categoryColor(for: category).opacity(0.15))
-                                .clipShape(Capsule())
+            ZStack {
+                Color.maxxBackground.ignoresSafeArea()
+                ScrollView {
+                    VStack(spacing: 20) {
+                        if let uiImage = UIImage(data: photo.imageData) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(
+                                            LinearGradient(
+                                                colors: [.maxxPrimary.opacity(0.5), .maxxCyan.opacity(0.3)],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 1.5
+                                        )
+                                )
+                                .neonGlow(color: .maxxPrimary, radius: 10, intensity: 0.5)
                         }
 
-                        if let angle = photo.angle {
-                            Label(angle.rawValue, systemImage: angle.icon)
+                        HStack {
+                            if let category = photo.parsedCategory {
+                                Label(category.rawValue, systemImage: category.icon)
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(Color.categoryColor(for: category))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color.categoryColor(for: category).opacity(0.15))
+                                    .clipShape(Capsule())
+                            }
+
+                            if let angle = photo.angle {
+                                Label(angle.rawValue, systemImage: angle.icon)
+                                    .font(.caption)
+                                    .foregroundColor(.maxxTextSecondary)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color.maxxSurface)
+                                    .clipShape(Capsule())
+                            }
+
+                            Spacer()
+
+                            Text(photo.capturedAt.fullFormatted)
                                 .font(.caption)
+                                .foregroundColor(.maxxTextMuted)
+                        }
+
+                        if !photo.note.isEmpty {
+                            Text(photo.note)
+                                .font(.subheadline)
                                 .foregroundColor(.maxxTextSecondary)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(Color.maxxSurface)
-                                .clipShape(Capsule())
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
-
-                        Spacer()
-
-                        Text(photo.capturedAt.fullFormatted)
-                            .font(.caption)
-                            .foregroundColor(.maxxTextMuted)
                     }
-
-                    if !photo.note.isEmpty {
-                        Text(photo.note)
-                            .font(.subheadline)
-                            .foregroundColor(.maxxTextSecondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
+                    .padding(20)
                 }
-                .padding(20)
             }
-            .background(Color.maxxBackground)
             .navigationTitle("Photo Detail")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -420,6 +621,7 @@ struct PhotoDetailSheet: View {
                         } label: {
                             Image(systemName: photo.isFavorite ? "heart.fill" : "heart")
                                 .foregroundColor(photo.isFavorite ? .maxxAccent : .maxxTextSecondary)
+                                .neonGlow(color: photo.isFavorite ? .maxxAccent : .clear, radius: 6)
                         }
 
                         Button(role: .destructive) {
