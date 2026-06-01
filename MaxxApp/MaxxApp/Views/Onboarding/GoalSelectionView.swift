@@ -48,7 +48,7 @@ struct GoalSelectionView: View {
                             }
 
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(goal.rawValue)
+                                Text(goal.displayName)
                                     .font(.body).fontWeight(.semibold).foregroundColor(.white)
                                 Text(goal.subtitle)
                                     .font(.caption).foregroundColor(.maxxTextSecondary)

@@ -91,14 +91,14 @@ final class Routine {
 
     static func defaultRoutines() -> [Routine] {
         [
-            Routine(name: "Morning Skincare", description: "Cleanser → Serum → Moisturizer → SPF", category: GlowUpCategory.skin.rawValue, icon: "drop.fill", durationMinutes: 10),
-            Routine(name: "Evening Skincare", description: "Double cleanse → Retinol → Night cream", category: GlowUpCategory.skin.rawValue, icon: "moon.fill", durationMinutes: 10),
-            Routine(name: "Mewing Practice", description: "Tongue on roof of mouth, teeth lightly together", category: GlowUpCategory.faceStructure.rawValue, icon: "face.smiling.inverse", durationMinutes: 5),
-            Routine(name: "Gym Session", description: "Push/Pull/Legs split", category: GlowUpCategory.fitness.rawValue, icon: "dumbbell.fill", durationMinutes: 60),
-            Routine(name: "Posture Check", description: "Chin tucks + shoulder blade squeezes", category: GlowUpCategory.posture.rawValue, icon: "figure.stand", durationMinutes: 5),
-            Routine(name: "Hair Care", description: "Style and maintain", category: GlowUpCategory.hair.rawValue, icon: "comb.fill", durationMinutes: 10),
-            Routine(name: "Teeth Whitening", description: "Whitening strips or oil pulling", category: GlowUpCategory.teeth.rawValue, icon: "mouth.fill", durationMinutes: 15, isPremium: true),
-            Routine(name: "Cold Shower", description: "2-minute cold exposure for skin & energy", category: GlowUpCategory.skin.rawValue, icon: "snowflake", durationMinutes: 5, isPremium: true),
+            Routine(name: String(localized: "routine.morningSkincare.name", defaultValue: "Morning Skincare"), description: String(localized: "routine.morningSkincare.desc", defaultValue: "Cleanser → Serum → Moisturizer → SPF"), category: GlowUpCategory.skin.rawValue, icon: "drop.fill", durationMinutes: 10),
+            Routine(name: String(localized: "routine.eveningSkincare.name", defaultValue: "Evening Skincare"), description: String(localized: "routine.eveningSkincare.desc", defaultValue: "Double cleanse → Retinol → Night cream"), category: GlowUpCategory.skin.rawValue, icon: "moon.fill", durationMinutes: 10),
+            Routine(name: String(localized: "routine.mewing.name", defaultValue: "Mewing Practice"), description: String(localized: "routine.mewing.desc", defaultValue: "Tongue on roof of mouth, teeth lightly together"), category: GlowUpCategory.faceStructure.rawValue, icon: "face.smiling.inverse", durationMinutes: 5),
+            Routine(name: String(localized: "routine.gym.name", defaultValue: "Gym Session"), description: String(localized: "routine.gym.desc", defaultValue: "Push/Pull/Legs split"), category: GlowUpCategory.fitness.rawValue, icon: "dumbbell.fill", durationMinutes: 60),
+            Routine(name: String(localized: "routine.posture.name", defaultValue: "Posture Check"), description: String(localized: "routine.posture.desc", defaultValue: "Chin tucks + shoulder blade squeezes"), category: GlowUpCategory.posture.rawValue, icon: "figure.stand", durationMinutes: 5),
+            Routine(name: String(localized: "routine.hair.name", defaultValue: "Hair Care"), description: String(localized: "routine.hair.desc", defaultValue: "Style and maintain"), category: GlowUpCategory.hair.rawValue, icon: "comb.fill", durationMinutes: 10),
+            Routine(name: String(localized: "routine.teeth.name", defaultValue: "Teeth Whitening"), description: String(localized: "routine.teeth.desc", defaultValue: "Whitening strips or oil pulling"), category: GlowUpCategory.teeth.rawValue, icon: "mouth.fill", durationMinutes: 15, isPremium: true),
+            Routine(name: String(localized: "routine.coldShower.name", defaultValue: "Cold Shower"), description: String(localized: "routine.coldShower.desc", defaultValue: "2-minute cold exposure for skin & energy"), category: GlowUpCategory.skin.rawValue, icon: "snowflake", durationMinutes: 5, isPremium: true),
         ]
     }
 }

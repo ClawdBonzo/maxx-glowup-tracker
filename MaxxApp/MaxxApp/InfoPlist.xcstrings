@@ -1,0 +1,124 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Maxx"
+          }
+        }
+      }
+    },
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MaxxApp"
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maxx benötigt Kamerazugriff, um Fortschrittsfotos aufzunehmen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maxx needs camera access to capture progress photos"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maxx necesita acceso a la cámara para capturar fotos de progreso"
+          }
+        },
+        "es-MX" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maxx necesita acceso a la cámara para capturar fotos de progreso"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maxx가 진행 사진을 촬영하려면 카메라 접근 권한이 필요합니다"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Maxx precisa de acesso à câmera para capturar fotos de progresso"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maxx, ilerleme fotoğrafları çekmek için kamera erişimine ihtiyaç duyar"
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maxx benötigt Zugriff auf die Mediathek, um Fortschrittsfotos zu speichern und zu laden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maxx needs photo library access to save and load progress photos"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maxx necesita acceso a la fototeca para guardar y cargar fotos de progreso"
+          }
+        },
+        "es-MX" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maxx necesita acceso a la galería para guardar y cargar fotos de progreso"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maxx가 진행 사진을 저장하고 불러오려면 사진 보관함 접근 권한이 필요합니다"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Maxx precisa de acesso à galeria para salvar e carregar fotos de progresso"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maxx, ilerleme fotoğraflarını kaydetmek ve yüklemek için fotoğraf kitaplığı erişimine ihtiyaç duyar"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

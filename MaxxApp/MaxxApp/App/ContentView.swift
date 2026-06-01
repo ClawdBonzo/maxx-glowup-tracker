@@ -8,6 +8,10 @@ struct ContentView: View {
     @State private var hasCompletedOnboarding = false
     @State private var selectedTab: AppTab = .home
     @State private var showSplash = true
+    @State private var gamificationVM: GamificationViewModel?
+    #if DEBUG
+    @State private var showAnalyticsScreenshot = false
+    #endif
 
     private var profile: UserProfile? { profiles.first }
 
@@ -52,8 +56,27 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(.dark)
+        #if DEBUG
+        .fullScreenCover(isPresented: $showAnalyticsScreenshot) {
+            AnalyticsDashboardView()
+        }
+        #endif
         .onAppear {
             checkOnboardingStatus()
+
+            // Create the shared GamificationViewModel once for all tabs
+            if gamificationVM == nil {
+                gamificationVM = GamificationViewModel(modelContext: modelContext)
+                gamificationVM?.createDailyQuests()
+            }
+
+            #if DEBUG
+            if DemoSeed.isScreenshotMode {
+                applyScreenshotTab()
+                showSplash = false
+                return
+            }
+            #endif
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 withAnimation(.easeOut(duration: 0.5)) {
@@ -63,36 +86,30 @@ struct ContentView: View {
         }
     }
 
+    #if DEBUG
+    private func applyScreenshotTab() {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-screenshotTab"), i + 1 < args.count else { return }
+        switch args[i + 1] {
+        case "home":         selectedTab = .home
+        case "progress":     selectedTab = .progress
+        case "routines":     selectedTab = .routines
+        case "gamification": selectedTab = .gamification
+        case "settings":     selectedTab = .settings
+        case "analytics":    showAnalyticsScreenshot = true
+        default: break
+        }
+    }
+    #endif
+
     // MARK: - Splash Screen
 
     private var splashScreen: some View {
-        ZStack {
-            Image("SplashDark")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .ignoresSafeArea()
-
-            VStack(spacing: 16) {
-                Image("MaxxLogo")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 120, height: 120)
-                    .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-                    .shadow(color: .maxxPrimary.opacity(0.5), radius: 20)
-
-                Text("MAXX")
-                    .font(.system(size: 40, weight: .black, design: .rounded))
-                    .tracking(6)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.white, .maxxSecondary],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-            }
-        }
-        .transition(.opacity)
+        Image("SplashDark")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .ignoresSafeArea()
+            .transition(.opacity)
     }
 
     // MARK: - Main Tab View
@@ -100,16 +117,16 @@ struct ContentView: View {
     private var mainTabView: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: $selectedTab) {
-                HomeView()
+                HomeView(gamificationVM: gamificationVM)
                     .tag(AppTab.home)
 
-                ProgressGalleryView()
+                ProgressGalleryView(gamificationVM: gamificationVM)
                     .tag(AppTab.progress)
 
-                RoutinesListView()
+                RoutinesListView(gamificationVM: gamificationVM)
                     .tag(AppTab.routines)
 
-                GamificationTabView()
+                GamificationTabView(gamificationVM: gamificationVM)
                     .tag(AppTab.gamification)
 
                 SettingsView()
@@ -119,6 +136,22 @@ struct ContentView: View {
 
             // Custom Tab Bar
             customTabBar
+
+            // Global celebration overlays
+            if let vm = gamificationVM {
+                if vm.showLevelUpAnimation {
+                    let (level, _) = vm.currentLevelInfo()
+                    LevelUpAnimationView(level: level)
+                        .transition(.opacity)
+                        .zIndex(100)
+                }
+
+                if vm.showBadgeUnlockAnimation, let badge = vm.selectedBadge {
+                    BadgeUnlockAnimationView(badge: badge)
+                        .transition(.opacity)
+                        .zIndex(100)
+                }
+            }
         }
     }
 

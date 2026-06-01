@@ -2,7 +2,7 @@ import SwiftUI
 
 struct StreakBadgeView: View {
     let count: Int
-    let label: String
+    let label: LocalizedStringKey
     let icon: String
     let color: Color
 
@@ -38,6 +38,6 @@ struct StreakBadgeView: View {
         .maxxCard()
         // Single accessibility element combining all child values
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("\(label): \(count)"))
+        .accessibilityLabel(Text(label) + Text(": \(count)"))
     }
 }

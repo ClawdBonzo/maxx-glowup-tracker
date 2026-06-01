@@ -48,7 +48,7 @@ struct CommitmentLevelView: View {
                             }
 
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(level.rawValue)
+                                Text(level.displayName)
                                     .font(.body).fontWeight(.semibold).foregroundColor(.white)
                                 Text(level.minutesPerDay)
                                     .font(.caption).foregroundColor(.maxxTextSecondary)

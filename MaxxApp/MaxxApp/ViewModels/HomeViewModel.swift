@@ -49,13 +49,13 @@ final class HomeViewModel {
         let hour = Calendar.current.component(.hour, from: .now)
         switch hour {
         case 5..<12:
-            greeting = "Good Morning"
+            greeting = String(localized: "greeting.morning", defaultValue: "Good Morning")
         case 12..<17:
-            greeting = "Good Afternoon"
+            greeting = String(localized: "greeting.afternoon", defaultValue: "Good Afternoon")
         case 17..<22:
-            greeting = "Good Evening"
+            greeting = String(localized: "greeting.evening", defaultValue: "Good Evening")
         default:
-            greeting = "Night Owl Mode"
+            greeting = String(localized: "greeting.night", defaultValue: "Night Owl Mode")
         }
     }
 

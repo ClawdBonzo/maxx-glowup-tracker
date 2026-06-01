@@ -104,15 +104,15 @@ struct AgeInputView: View {
     private var ageInsight: String {
         switch viewModel.age {
         case 13...17:
-            "Great time to build healthy habits early. Your skin and body are still developing!"
+            String(localized: "ageInsight.teen", defaultValue: "Great time to build healthy habits early. Your skin and body are still developing!")
         case 18...24:
-            "Prime glow-up years. Consistency now pays massive dividends later."
+            String(localized: "ageInsight.youngAdult", defaultValue: "Prime glow-up years. Consistency now pays massive dividends later.")
         case 25...34:
-            "Focus on prevention and maintenance. Skincare and fitness compound over time."
+            String(localized: "ageInsight.midTwenties", defaultValue: "Focus on prevention and maintenance. Skincare and fitness compound over time.")
         case 35...44:
-            "Anti-aging routines become key. You'll see incredible results with the right approach."
+            String(localized: "ageInsight.thirties", defaultValue: "Anti-aging routines become key. You'll see incredible results with the right approach.")
         default:
-            "It's never too late to level up. Small changes make a huge difference."
+            String(localized: "ageInsight.older", defaultValue: "It's never too late to level up. Small changes make a huge difference.")
         }
     }
 }

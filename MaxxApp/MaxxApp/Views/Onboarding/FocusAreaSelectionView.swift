@@ -53,7 +53,7 @@ struct FocusAreaSelectionView: View {
                                     .font(.body)
                                     .foregroundColor(isSelected ? Color.categoryColor(for: category) : .maxxTextSecondary)
                             }
-                            Text(category.rawValue)
+                            Text(category.displayName)
                                 .font(.subheadline).fontWeight(.semibold).foregroundColor(.white)
                         }
                         .frame(maxWidth: .infinity)

@@ -40,7 +40,7 @@ struct GenderSelectionView: View {
                                 .font(.title2)
                                 .frame(width: 32)
 
-                            Text(gender.rawValue)
+                            Text(gender.displayName)
                                 .font(.body).fontWeight(.semibold)
 
                             Spacer()

@@ -16,6 +16,7 @@ final class ProgressViewModel {
     var comparePhotoB: ProgressPhoto?
     var newPhotoNote = ""
     var selectedAngle: PhotoAngle = .front
+    var showCompare = false
 
     func savePhoto(
         imageData: Data,

@@ -45,6 +45,15 @@ enum PhotoAngle: String, Codable, CaseIterable {
     case threeQuarter = "3/4"
     case profile = "Profile"
 
+    var displayName: String {
+        switch self {
+        case .front:        String(localized: "angle.front", defaultValue: "Front")
+        case .side:         String(localized: "angle.side", defaultValue: "Side")
+        case .threeQuarter: String(localized: "angle.threeQuarter", defaultValue: "3/4")
+        case .profile:      String(localized: "angle.profile", defaultValue: "Profile")
+        }
+    }
+
     var icon: String {
         switch self {
         case .front: "person.fill"

@@ -49,29 +49,29 @@ final class GamificationViewModel {
         if badges.isEmpty {
             let defaultBadges = [
                 Badge(
-                    name: "First Step",
-                    description: "Complete your first daily routine",
+                    name: String(localized: "badge.firstStep.name", defaultValue: "First Step"),
+                    description: String(localized: "badge.firstStep.desc", defaultValue: "Complete your first daily routine"),
                     icon: "👣",
                     tier: .bronze,
                     requirement: .routinesCompleted(1)
                 ),
                 Badge(
-                    name: "Week Warrior",
-                    description: "Maintain a 7-day streak",
+                    name: String(localized: "badge.weekWarrior.name", defaultValue: "Week Warrior"),
+                    description: String(localized: "badge.weekWarrior.desc", defaultValue: "Maintain a 7-day streak"),
                     icon: "⚔️",
                     tier: .silver,
                     requirement: .streakDays(7)
                 ),
                 Badge(
-                    name: "Transformation",
-                    description: "Upload 10 progress photos",
+                    name: String(localized: "badge.transformation.name", defaultValue: "Transformation"),
+                    description: String(localized: "badge.transformation.desc", defaultValue: "Upload 10 progress photos"),
                     icon: "📸",
                     tier: .gold,
                     requirement: .photosUploaded(10)
                 ),
                 Badge(
-                    name: "Jawline God",
-                    description: "Reach Diamond Jawline",
+                    name: String(localized: "badge.jawlineGod.name", defaultValue: "Jawline God"),
+                    description: String(localized: "badge.jawlineGod.desc", defaultValue: "Reach Diamond Jawline"),
                     icon: "💎",
                     tier: .diamond,
                     requirement: .levelReached(20)
@@ -116,9 +116,9 @@ final class GamificationViewModel {
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
 
         let dailyQuests = [
-            Quest(type: .daily, title: "Morning Routine", description: "Complete any morning habit", icon: "🌅", xpReward: 50, targetDate: tomorrow),
-            Quest(type: .daily, title: "Progress Photo", description: "Take a progress photo", icon: "📸", xpReward: 75, targetDate: tomorrow),
-            Quest(type: .daily, title: "Triple Habits", description: "Complete 3 routines today", icon: "🔥", xpReward: 100, targetDate: tomorrow),
+            Quest(type: .daily, title: String(localized: "quest.morning.title", defaultValue: "Morning Routine"), description: String(localized: "quest.morning.desc", defaultValue: "Complete any morning habit"), icon: "🌅", xpReward: 50, targetDate: tomorrow),
+            Quest(type: .daily, title: String(localized: "quest.photo.title", defaultValue: "Progress Photo"), description: String(localized: "quest.photo.desc", defaultValue: "Take a progress photo"), icon: "📸", xpReward: 75, targetDate: tomorrow),
+            Quest(type: .daily, title: String(localized: "quest.triple.title", defaultValue: "Triple Habits"), description: String(localized: "quest.triple.desc", defaultValue: "Complete 3 routines today"), icon: "🔥", xpReward: 100, targetDate: tomorrow),
         ]
 
         for quest in dailyQuests {

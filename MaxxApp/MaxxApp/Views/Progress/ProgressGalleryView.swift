@@ -4,11 +4,16 @@ import PhotosUI
 
 struct ProgressGalleryView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(SubscriptionManager.self) private var subManager
     @Query(sort: \ProgressPhoto.capturedAt, order: .reverse) private var photos: [ProgressPhoto]
     @State private var viewModel = ProgressViewModel()
-    @State private var gamificationVM: GamificationViewModel?
     @State private var showAddSheet = false
     @State private var showMirrorMode = false
+    @State private var showPremiumGate = false
+    @State private var premiumGateFeature: PremiumGateView.ProFeature = .photos
+
+    /// Shared across all tabs — created in ContentView
+    var gamificationVM: GamificationViewModel?
 
     private let columns = [
         GridItem(.flexible(), spacing: 3),
@@ -46,8 +51,13 @@ struct ProgressGalleryView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     HStack(spacing: 12) {
-                        NavigationLink {
-                            PhotoCompareView(photos: photos)
+                        Button {
+                            if subManager.isPremium {
+                                viewModel.showCompare = true
+                            } else {
+                                premiumGateFeature = .photoCompare
+                                showPremiumGate = true
+                            }
                         } label: {
                             Image(systemName: "rectangle.on.rectangle")
                                 .foregroundStyle(
@@ -60,7 +70,12 @@ struct ProgressGalleryView: View {
                         }
 
                         Button {
-                            showAddSheet = true
+                            if !subManager.isPremium && photos.count >= FreeTierLimits.maxPhotos {
+                                premiumGateFeature = .photos
+                                showPremiumGate = true
+                            } else {
+                                showAddSheet = true
+                            }
                         } label: {
                             Image(systemName: "camera.fill")
                                 .foregroundStyle(
@@ -80,10 +95,11 @@ struct ProgressGalleryView: View {
             .fullScreenCover(isPresented: $showMirrorMode) {
                 MirrorModeView()
             }
-            .onAppear {
-                if gamificationVM == nil {
-                    gamificationVM = GamificationViewModel(modelContext: modelContext)
-                }
+            .sheet(isPresented: $showPremiumGate) {
+                PremiumGateView(feature: premiumGateFeature)
+            }
+            .navigationDestination(isPresented: $viewModel.showCompare) {
+                PhotoCompareView(photos: photos)
             }
             .sheet(item: $viewModel.selectedPhoto) { photo in
                 PhotoDetailSheet(photo: photo, viewModel: viewModel)
@@ -95,7 +111,12 @@ struct ProgressGalleryView: View {
 
     private var mirrorModeBanner: some View {
         Button {
-            showMirrorMode = true
+            if subManager.isPremium {
+                showMirrorMode = true
+            } else {
+                premiumGateFeature = .mirrorMode
+                showPremiumGate = true
+            }
         } label: {
             HStack(spacing: 14) {
                 ZStack {
@@ -122,14 +143,14 @@ struct ProgressGalleryView: View {
                             .fontWeight(.black)
                             .foregroundColor(.white)
 
-                        Text("NEW")
+                        Text(subManager.isPremium ? "NEW" : "PRO")
                             .font(.system(size: 9, weight: .black))
                             .foregroundColor(.black)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color.maxxGold)
+                            .background(subManager.isPremium ? Color.maxxGold : Color.maxxCyan)
                             .clipShape(Capsule())
-                            .neonGlow(color: .maxxGold, radius: 4)
+                            .neonGlow(color: subManager.isPremium ? .maxxGold : .maxxCyan, radius: 4)
                     }
 
                     Text("Golden ratio grid • Real-time alignment")
@@ -156,13 +177,13 @@ struct ProgressGalleryView: View {
     private var categoryFilter: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
-                filterChip(label: "All", isSelected: viewModel.selectedCategory == nil) {
+                filterChip(label: String(localized: "filter.all", defaultValue: "All"), isSelected: viewModel.selectedCategory == nil) {
                     viewModel.selectedCategory = nil
                 }
 
                 ForEach(GlowUpCategory.allCases) { category in
                     filterChip(
-                        label: category.rawValue,
+                        label: category.displayName,
                         isSelected: viewModel.selectedCategory == category
                     ) {
                         viewModel.selectedCategory = category
@@ -410,7 +431,7 @@ struct AddPhotoSheet: View {
                                         Button {
                                             selectedCategory = category
                                         } label: {
-                                            Text(category.rawValue)
+                                            Text(category.displayName)
                                                 .font(.caption)
                                                 .fontWeight(.bold)
                                                 .foregroundColor(selectedCategory == category ? .white : .maxxTextSecondary)
@@ -454,7 +475,7 @@ struct AddPhotoSheet: View {
                                     } label: {
                                         VStack(spacing: 4) {
                                             Image(systemName: angle.icon)
-                                            Text(angle.rawValue)
+                                            Text(angle.displayName)
                                                 .font(.caption2)
                                         }
                                         .foregroundColor(selectedAngle == angle ? .white : .maxxTextSecondary)
@@ -568,7 +589,7 @@ struct PhotoDetailSheet: View {
 
                         HStack {
                             if let category = photo.parsedCategory {
-                                Label(category.rawValue, systemImage: category.icon)
+                                Label(category.displayName, systemImage: category.icon)
                                     .font(.caption)
                                     .fontWeight(.semibold)
                                     .foregroundColor(Color.categoryColor(for: category))
@@ -579,7 +600,7 @@ struct PhotoDetailSheet: View {
                             }
 
                             if let angle = photo.angle {
-                                Label(angle.rawValue, systemImage: angle.icon)
+                                Label(angle.displayName, systemImage: angle.icon)
                                     .font(.caption)
                                     .foregroundColor(.maxxTextSecondary)
                                     .padding(.horizontal, 10)

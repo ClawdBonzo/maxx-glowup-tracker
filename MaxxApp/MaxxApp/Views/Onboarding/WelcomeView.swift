@@ -111,7 +111,7 @@ struct WelcomeView: View {
         }
     }
 
-    private func featureRow(icon: String, text: String, delay: Double) -> some View {
+    private func featureRow(icon: String, text: LocalizedStringKey, delay: Double) -> some View {
         HStack(spacing: 14) {
             ZStack {
                 Circle()

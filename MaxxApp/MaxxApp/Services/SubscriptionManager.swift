@@ -24,10 +24,10 @@ final class SubscriptionManager: NSObject {
 
     /// Canonical product identifiers — must match App Store Connect exactly
     enum ProductID: String, CaseIterable {
-        case weekly   = "com.clawdbonzo.maxx.weekly"
-        case monthly  = "com.clawdbonzo.maxx.monthly"
-        case yearly   = "com.clawdbonzo.maxx.yearly"
-        case lifetime = "com.clawdbonzo.maxx.lifetime"
+        case weekly   = "com.clawdbonzo.MaxxApp.weekly"
+        case monthly  = "com.clawdbonzo.MaxxApp.monthly"
+        case yearly   = "com.clawdbonzo.MaxxApp.yearly"
+        case lifetime = "com.clawdbonzo.MaxxApp.lifetime"
 
         var displayName: String {
             switch self {
@@ -77,6 +77,13 @@ final class SubscriptionManager: NSObject {
     private override init() { super.init() }
 
     func start() {
+        #if DEBUG
+        // Screenshot mode: force premium so gated features render; skip network/entitlement checks.
+        if ProcessInfo.processInfo.arguments.contains("-screenshotMode") {
+            isPremium = true
+            return
+        }
+        #endif
         Purchases.shared.delegate = self
         Task { await checkEntitlements() }
         Task { await fetchOfferings() }

@@ -5,9 +5,14 @@ struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var profiles: [UserProfile]
     @Query(sort: \Routine.sortOrder) private var routines: [Routine]
+    @Environment(SubscriptionManager.self) private var subManager
     @State private var viewModel = HomeViewModel()
-    @State private var gamificationVM: GamificationViewModel?
     @State private var showDailyCheckIn = false
+    @State private var showAnalytics = false
+    @State private var showAnalyticsGate = false
+
+    /// Shared across all tabs — created in ContentView
+    var gamificationVM: GamificationViewModel?
 
     private var profile: UserProfile? { profiles.first }
 
@@ -35,12 +40,15 @@ struct HomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 viewModel.loadToday(modelContext: modelContext)
-                if gamificationVM == nil {
-                    gamificationVM = GamificationViewModel(modelContext: modelContext)
-                }
             }
             .sheet(isPresented: $showDailyCheckIn) {
                 DailyCheckInSheet(log: viewModel.todayLog, gamificationVM: gamificationVM)
+            }
+            .sheet(isPresented: $showAnalytics) {
+                AnalyticsDashboardView()
+            }
+            .sheet(isPresented: $showAnalyticsGate) {
+                PremiumGateView(feature: .analytics)
             }
         }
     }
@@ -169,6 +177,30 @@ struct HomeView: View {
             Spacer()
 
             HStack(spacing: 12) {
+                Button {
+                    if subManager.isPremium { showAnalytics = true }
+                    else { showAnalyticsGate = true }
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(Color.maxxCyan.opacity(0.15))
+                            .frame(width: 42, height: 42)
+                            .neonGlow(color: .maxxCyan, radius: 8)
+
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.maxxCyan, .maxxPrimary],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                    }
+                }
+                .accessibilityLabel(Text("Analytics"))
+
                 Button {
                     showDailyCheckIn = true
                 } label: {
@@ -393,7 +425,7 @@ struct RoutineRowView: View {
 
                 HStack(spacing: 8) {
                     if let category = routine.parsedCategory {
-                        Text(category.rawValue)
+                        Text(category.displayName)
                             .font(.caption2)
                             .fontWeight(.semibold)
                             .foregroundColor(Color.categoryColor(for: category))
@@ -496,7 +528,7 @@ struct DailyCheckInSheet: View {
         .preferredColorScheme(.dark)
     }
 
-    private func ratingSection(title: String, rating: Binding<Int>, icon: String, color: Color) -> some View {
+    private func ratingSection(title: LocalizedStringKey, rating: Binding<Int>, icon: String, color: Color) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: icon)

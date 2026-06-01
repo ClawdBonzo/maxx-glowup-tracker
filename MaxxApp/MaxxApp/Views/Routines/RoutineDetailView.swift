@@ -25,7 +25,7 @@ struct RoutineDetailView: View {
                         .foregroundColor(.white)
 
                     if let category = routine.parsedCategory {
-                        Text(category.rawValue)
+                        Text(category.displayName)
                             .font(.caption)
                             .foregroundColor(Color.categoryColor(for: category))
                             .padding(.horizontal, 12)
@@ -110,7 +110,7 @@ struct RoutineDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func statItem(value: String, label: String, icon: String) -> some View {
+    private func statItem(value: String, label: LocalizedStringKey, icon: String) -> some View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.title3)

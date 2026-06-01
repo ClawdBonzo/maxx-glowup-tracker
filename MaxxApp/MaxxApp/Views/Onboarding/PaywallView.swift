@@ -7,12 +7,14 @@ struct PaywallView: View {
     let viewModel: OnboardingViewModel
     let onContinue: () -> Void
 
+    @Environment(\.openURL) private var openURL
     @State private var subManager  = SubscriptionManager.shared
     @State private var animate      = false
     @State private var selectedPID: SubscriptionManager.ProductID = .monthly
     @State private var selectedLive: Package?
     @State private var isPurchasing = false
     @State private var showCelebration = false
+    @State private var showSkipButton = false
 
     // Live packages keyed by ProductID for O(1) lookup
     private var liveMap: [SubscriptionManager.ProductID: Package] {
@@ -50,6 +52,13 @@ struct PaywallView: View {
         .onAppear {
             withAnimation(.spring(response: 0.65, dampingFraction: 0.82)) { animate = true }
             Task { await subManager.fetchOfferings() }
+
+            // Delay "Continue free" to reduce skip rate
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                withAnimation(.easeIn(duration: 0.4)) {
+                    showSkipButton = true
+                }
+            }
         }
         .onChange(of: subManager.packages) { _, _ in syncSelection() }
     }
@@ -72,19 +81,23 @@ struct PaywallView: View {
     private var dismissButton: some View {
         HStack {
             Spacer()
-            Button { onContinue() } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.white.opacity(0.5))
-                    .frame(width: 28, height: 28)
-                    .background(.white.opacity(0.08))
-                    .clipShape(Circle())
+            if showSkipButton {
+                Button { onContinue() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white.opacity(0.35))
+                        .frame(width: 28, height: 28)
+                        .background(.white.opacity(0.06))
+                        .clipShape(Circle())
+                }
+                .accessibilityLabel("Dismiss paywall")
+                .transition(.opacity)
             }
-            .accessibilityLabel("Dismiss paywall")
         }
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 4)
+        .frame(minHeight: 38)
     }
 
     // MARK: - Compact Hero (icon + title, ~90pt total)
@@ -141,7 +154,7 @@ struct PaywallView: View {
         .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.1), value: animate)
     }
 
-    private func pill(icon: String, label: String) -> some View {
+    private func pill(icon: String, label: LocalizedStringKey) -> some View {
         HStack(spacing: 5) {
             Image(systemName: icon).font(.system(size: 10, weight: .semibold))
             Text(label).font(.system(size: 11, weight: .semibold))
@@ -445,19 +458,26 @@ struct PaywallView: View {
     // MARK: - Footer Links
 
     private var footerLinks: some View {
-        HStack(spacing: 0) {
-            Spacer()
-            Button("Continue free") { onContinue() }
-            Text(" · ").foregroundColor(.maxxTextMuted)
-            Button("Restore") { Task { await subManager.restorePurchases() } }
-            Text(" · ").foregroundColor(.maxxTextMuted)
-            Button("Terms") { }
-            Text(" · ").foregroundColor(.maxxTextMuted)
-            Button("Privacy") { }
-            Spacer()
+        VStack(spacing: 6) {
+            HStack(spacing: 0) {
+                Spacer()
+                Button("Restore") { Task { await subManager.restorePurchases() } }
+                Text(" · ").foregroundColor(.maxxTextMuted)
+                Button("Terms") { openURL(URL(string: "https://gwlabs.app/terms")!) }
+                Text(" · ").foregroundColor(.maxxTextMuted)
+                Button("Privacy") { openURL(URL(string: "https://gwlabs.app/privacy")!) }
+                Spacer()
+            }
+            .font(.system(size: 11))
+            .foregroundColor(.maxxTextMuted)
+
+            if showSkipButton {
+                Button("Continue with limited features") { onContinue() }
+                    .font(.system(size: 11))
+                    .foregroundColor(.maxxTextMuted.opacity(0.6))
+                    .transition(.opacity)
+            }
         }
-        .font(.system(size: 11))
-        .foregroundColor(.maxxTextMuted)
         .padding(.top, 10)
         .opacity(animate ? 1 : 0)
         .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.46), value: animate)

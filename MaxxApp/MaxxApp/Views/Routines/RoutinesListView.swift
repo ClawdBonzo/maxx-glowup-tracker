@@ -3,10 +3,14 @@ import SwiftData
 
 struct RoutinesListView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(SubscriptionManager.self) private var subManager
     @Query(sort: \Routine.sortOrder) private var routines: [Routine]
     @State private var viewModel = RoutineViewModel()
-    @State private var gamificationVM: GamificationViewModel?
     @State private var completionFlash: UUID? = nil
+    @State private var showPremiumGate = false
+
+    /// Shared across all tabs — created in ContentView
+    var gamificationVM: GamificationViewModel?
 
     var body: some View {
         NavigationStack {
@@ -28,7 +32,11 @@ struct RoutinesListView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        viewModel.showAddRoutine = true
+                        if !subManager.isPremium && routines.count >= FreeTierLimits.maxRoutines {
+                            showPremiumGate = true
+                        } else {
+                            viewModel.showAddRoutine = true
+                        }
                     } label: {
                         ZStack {
                             Circle()
@@ -52,10 +60,8 @@ struct RoutinesListView: View {
             .sheet(isPresented: $viewModel.showAddRoutine) {
                 AddRoutineSheet(viewModel: viewModel)
             }
-            .onAppear {
-                if gamificationVM == nil {
-                    gamificationVM = GamificationViewModel(modelContext: modelContext)
-                }
+            .sheet(isPresented: $showPremiumGate) {
+                PremiumGateView(feature: .routines)
             }
         }
     }
@@ -162,12 +168,12 @@ struct RoutinesListView: View {
     private var categoryFilter: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
-                filterChip(label: "All", isSelected: viewModel.selectedCategory == nil) {
+                filterChip(label: String(localized: "filter.all", defaultValue: "All"), isSelected: viewModel.selectedCategory == nil) {
                     viewModel.selectedCategory = nil
                 }
                 ForEach(GlowUpCategory.allCases) { category in
                     filterChip(
-                        label: category.rawValue,
+                        label: category.displayName,
                         isSelected: viewModel.selectedCategory == category
                     ) {
                         viewModel.selectedCategory = category
@@ -301,7 +307,7 @@ struct RoutineCardView: View {
                                 .fill(Color.categoryColor(for: category))
                                 .frame(width: 6, height: 6)
                                 .neonGlow(color: Color.categoryColor(for: category), radius: 3)
-                            Text(category.rawValue)
+                            Text(category.displayName)
                                 .font(.caption2)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.maxxTextSecondary)

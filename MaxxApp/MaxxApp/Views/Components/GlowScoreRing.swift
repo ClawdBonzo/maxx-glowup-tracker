@@ -15,10 +15,10 @@ struct GlowScoreRing: View {
 
     private var scoreLabel: String {
         switch score {
-        case 0..<30:  "Getting Started"
-        case 30..<60: "On Track"
-        case 60..<80: "Looking Good"
-        default:      "GLOWING 🔥"
+        case 0..<30:  String(localized: "score.gettingStarted", defaultValue: "Getting Started")
+        case 30..<60: String(localized: "score.onTrack", defaultValue: "On Track")
+        case 60..<80: String(localized: "score.lookingGood", defaultValue: "Looking Good")
+        default:      String(localized: "score.glowing", defaultValue: "GLOWING 🔥")
         }
     }
 

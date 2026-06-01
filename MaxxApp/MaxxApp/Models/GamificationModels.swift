@@ -13,11 +13,11 @@ enum JawlineLevel: Int, Codable, CaseIterable, Identifiable {
     var id: Int { rawValue }
     var displayName: String {
         switch self {
-        case .bronzeJawline: "Bronze Jawline"
-        case .silverJawline: "Silver Jawline"
-        case .goldJawline: "Gold Jawline"
-        case .platinumJawline: "Platinum Jawline"
-        case .diamondJawline: "Diamond Jawline"
+        case .bronzeJawline:   String(localized: "level.bronze", defaultValue: "Bronze Jawline")
+        case .silverJawline:   String(localized: "level.silver", defaultValue: "Silver Jawline")
+        case .goldJawline:     String(localized: "level.gold", defaultValue: "Gold Jawline")
+        case .platinumJawline: String(localized: "level.platinum", defaultValue: "Platinum Jawline")
+        case .diamondJawline:  String(localized: "level.diamond", defaultValue: "Diamond Jawline")
         }
     }
 
@@ -162,15 +162,15 @@ enum BadgeRequirement: Codable {
     var displayName: String {
         switch self {
         case .streakDays(let days):
-            return "\(days)-Day Streak"
+            return String(localized: "badgeReq.streakDays", defaultValue: "\(days)-Day Streak")
         case .totalXP(let xp):
-            return "\(xp) XP Earned"
+            return String(localized: "badgeReq.totalXP", defaultValue: "\(xp) XP Earned")
         case .routinesCompleted(let count):
-            return "\(count) Routines Completed"
+            return String(localized: "badgeReq.routines", defaultValue: "\(count) Routines Completed")
         case .photosUploaded(let count):
-            return "\(count) Progress Photos"
+            return String(localized: "badgeReq.photos", defaultValue: "\(count) Progress Photos")
         case .levelReached(let level):
-            return "Reach Level \(level)"
+            return String(localized: "badgeReq.level", defaultValue: "Reach Level \(level)")
         }
     }
 }

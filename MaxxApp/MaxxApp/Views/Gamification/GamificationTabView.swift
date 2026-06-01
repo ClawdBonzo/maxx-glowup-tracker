@@ -3,9 +3,14 @@ import SwiftData
 
 struct GamificationTabView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var gamificationVM: GamificationViewModel?
+    @Environment(SubscriptionManager.self) private var subManager
     @State private var selectedTab: GamTab = .quests
     @State private var showShare = false
+    @State private var showPremiumGate = false
+    @State private var premiumGateFeature: PremiumGateView.ProFeature = .quests
+
+    /// Shared across all tabs — created in ContentView
+    var gamificationVM: GamificationViewModel?
 
     enum GamTab {
         case quests, badges, level
@@ -28,11 +33,23 @@ struct GamificationTabView: View {
                 // Content
                 if let vm = gamificationVM {
                     TabView(selection: $selectedTab) {
-                        QuestsTabContentView(viewModel: vm)
-                            .tag(GamTab.quests)
+                        Group {
+                            if subManager.isPremium {
+                                QuestsTabContentView(viewModel: vm)
+                            } else {
+                                proLockedTab(feature: .quests)
+                            }
+                        }
+                        .tag(GamTab.quests)
 
-                        BadgesTabContentView(viewModel: vm)
-                            .tag(GamTab.badges)
+                        Group {
+                            if subManager.isPremium {
+                                BadgesTabContentView(viewModel: vm)
+                            } else {
+                                proLockedTab(feature: .badges)
+                            }
+                        }
+                        .tag(GamTab.badges)
 
                         let (level, progress) = vm.currentLevelInfo()
                         LevelTabContentView(
@@ -40,7 +57,14 @@ struct GamificationTabView: View {
                             progress: progress,
                             totalXP: vm.gamificationState.totalXP,
                             streak: vm.gamificationState.currentStreak,
-                            onShare: { showShare = true }
+                            onShare: {
+                                if subManager.isPremium {
+                                    showShare = true
+                                } else {
+                                    premiumGateFeature = .shareCard
+                                    showPremiumGate = true
+                                }
+                            }
                         )
                         .tag(GamTab.level)
                     }
@@ -48,19 +72,7 @@ struct GamificationTabView: View {
                 }
             }
 
-            // Celebration overlays
-            if let vm = gamificationVM {
-                if vm.showLevelUpAnimation {
-                    let (level, _) = vm.currentLevelInfo()
-                    LevelUpAnimationView(level: level)
-                        .transition(.opacity)
-                }
-
-                if vm.showBadgeUnlockAnimation, let badge = vm.selectedBadge {
-                    BadgeUnlockAnimationView(badge: badge)
-                        .transition(.opacity)
-                }
-            }
+            // Celebration overlays are now in ContentView (shared across all tabs)
         }
         .sheet(isPresented: $showShare) {
             if let vm = gamificationVM {
@@ -74,11 +86,77 @@ struct GamificationTabView: View {
                 )
             }
         }
+        .sheet(isPresented: $showPremiumGate) {
+            PremiumGateView(feature: premiumGateFeature)
+        }
         .onAppear {
-            if gamificationVM == nil {
-                gamificationVM = GamificationViewModel(modelContext: modelContext)
-                gamificationVM?.createDailyQuests()
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("-screenshotMode") {
+                selectedTab = .level
             }
+            #endif
+        }
+    }
+
+    // MARK: - Pro Locked Tab
+
+    private func proLockedTab(feature: PremiumGateView.ProFeature) -> some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            ZStack {
+                Circle()
+                    .fill(feature.accentColor.opacity(0.10))
+                    .frame(width: 80, height: 80)
+
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [feature.accentColor, feature.accentColor.opacity(0.5)],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                    )
+            }
+
+            VStack(spacing: 8) {
+                Text(feature.title)
+                    .font(.headline)
+                    .fontWeight(.black)
+                    .foregroundColor(.white)
+
+                Text(feature.subtitle)
+                    .font(.subheadline)
+                    .foregroundColor(.maxxTextSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
+
+            Button {
+                premiumGateFeature = feature
+                showPremiumGate = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "crown.fill")
+                        .font(.caption)
+                    Text("Unlock with Pro")
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(
+                    LinearGradient(
+                        colors: [.maxxPrimary, Color(hex: "6B0FD4")],
+                        startPoint: .leading, endPoint: .trailing
+                    )
+                )
+                .clipShape(Capsule())
+                .shadow(color: .maxxPrimary.opacity(0.4), radius: 12, y: 4)
+            }
+
+            Spacer()
         }
     }
 
@@ -606,6 +684,6 @@ struct LevelTabContentView: View {
 }
 
 #Preview {
-    GamificationTabView()
+    GamificationTabView(gamificationVM: nil)
         .modelContainer(for: [Quest.self, Badge.self, GamificationState.self])
 }

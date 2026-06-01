@@ -23,6 +23,13 @@ struct MaxxGlowUpApp: App {
         // Start subscription manager (sets delegate, fetches offerings + entitlements)
         SubscriptionManager.shared.start()
 
+        #if DEBUG
+        // Force premium in screenshot mode so gated features render in captures.
+        if DemoSeed.isScreenshotMode {
+            SubscriptionManager.shared.isPremium = true
+        }
+        #endif
+
         // Create SwiftData model container with migration-safe fallback.
         // If the store is corrupted (e.g. schema change from dev builds),
         // delete and recreate rather than crashing on launch.
@@ -56,6 +63,12 @@ struct MaxxGlowUpApp: App {
                 fatalError("[MaxxApp] Cannot create SwiftData store even after reset: \(error)")
             }
         }
+
+        #if DEBUG
+        if DemoSeed.isScreenshotMode {
+            DemoSeed.seed(modelContainer.mainContext)
+        }
+        #endif
     }
 
     var body: some Scene {

@@ -22,7 +22,7 @@ struct CategoryCardView: View {
                 }
             }
 
-            Text(category.rawValue)
+            Text(category.displayName)
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .foregroundColor(.white)

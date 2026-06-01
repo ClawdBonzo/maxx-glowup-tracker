@@ -4,6 +4,7 @@ import Charts
 
 struct AnalyticsDashboardView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @Query(sort: \DailyLog.date, order: .reverse) private var logs: [DailyLog]
     @Query(sort: \Routine.sortOrder) private var routines: [Routine]
     @Query private var photos: [ProgressPhoto]
@@ -31,6 +32,12 @@ struct AnalyticsDashboardView: View {
             .background(Color.maxxBackground)
             .navigationTitle("Analytics")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .foregroundColor(.maxxPrimary)
+                }
+            }
         }
     }
 
@@ -192,7 +199,7 @@ struct AnalyticsDashboardView: View {
                             .foregroundColor(Color.categoryColor(for: category))
                             .frame(width: 24)
 
-                        Text(category.rawValue)
+                        Text(category.displayName)
                             .font(.subheadline)
                             .foregroundColor(.white)
 
@@ -247,7 +254,7 @@ struct AnalyticsDashboardView: View {
         }
     }
 
-    private func statCard(title: String, value: String, icon: String, color: Color) -> some View {
+    private func statCard(title: LocalizedStringKey, value: String, icon: String, color: Color) -> some View {
         VStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.title2)

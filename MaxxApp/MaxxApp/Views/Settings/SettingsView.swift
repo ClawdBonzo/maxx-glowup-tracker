@@ -31,13 +31,13 @@ struct SettingsView: View {
                                 .foregroundColor(.white)
 
                             if let goal = profile?.parsedGoal {
-                                Text(goal.rawValue)
+                                Text(goal.displayName)
                                     .font(.caption)
                                     .foregroundColor(.maxxTextSecondary)
                             }
 
                             if let commitment = profile?.parsedCommitment {
-                                Text(commitment.rawValue + " • " + commitment.minutesPerDay)
+                                Text(commitment.displayName + " • " + commitment.minutesPerDay)
                                     .font(.caption)
                                     .foregroundColor(.maxxTextMuted)
                             }
