@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/robgoldstein/Desktop/Maxx-GlowUp-Tracker/.claude/auto-commit-push.sh",
+            "timeout": 300,
+            "statusMessage": "Build-gating + auto commit/push…"
+          }
+        ]
+      }
+    ]
+  }
+}
