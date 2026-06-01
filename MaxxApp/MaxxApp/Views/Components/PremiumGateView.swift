@@ -184,7 +184,7 @@ struct PremiumGateView: View {
                     }
                     .disabled(isPurchasing)
 
-                    Text("3 days free · then $9.99/mo · cancel anytime")
+                    Text("3 days free, then $9.99/month. Auto-renews until canceled; cancel anytime in Settings.")
                         .font(.caption)
                         .foregroundColor(.maxxTextSecondary)
 

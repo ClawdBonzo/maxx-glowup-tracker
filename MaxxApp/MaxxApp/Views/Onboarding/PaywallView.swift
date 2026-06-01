@@ -203,7 +203,7 @@ struct PaywallView: View {
         let savingsPct: Int = {
             if pid == .yearly {
                 return subManager.yearlySavingsPercent(
-                    yearlyPackage: pkg ?? liveMap[.yearly] ?? dummyYearlyOrNil() ?? liveMap.values.first!,
+                    yearlyPackage: pkg ?? liveMap[.yearly],
                     monthlyPackage: liveMap[.monthly]
                 )
             }
@@ -447,12 +447,12 @@ struct PaywallView: View {
         let price = liveMap[selectedPID]?.localizedPriceString ?? subManager.fallbackPrice(for: selectedPID)
         let period = liveMap[selectedPID].map { subManager.periodLabel($0) } ?? subManager.fallbackPeriod(for: selectedPID)
         if selectedPID.hasTrial {
-            return "3 days free · then \(price)\(period) · cancel anytime"
+            return "3 days free, then \(price)\(period). Auto-renews until canceled; cancel anytime in Settings."
         }
         if selectedPID == .lifetime {
             return "One-time purchase · no subscription"
         }
-        return "\(price)\(period) · cancel anytime"
+        return "\(price)\(period). Auto-renews until canceled; cancel anytime in Settings."
     }
 
     // MARK: - Footer Links
@@ -582,7 +582,4 @@ struct PaywallView: View {
             selectedLive = monthly
         }
     }
-
-    /// Used only for savings-percent fallback when yearly package exists but monthly doesn't
-    private func dummyYearlyOrNil() -> Package? { nil }
 }

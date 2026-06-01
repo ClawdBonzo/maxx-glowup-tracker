@@ -83,6 +83,14 @@ final class SubscriptionManager: NSObject {
             isPremium = true
             return
         }
+        // Paywall test: simulate the App Review sandbox where IAPs aren't yet approved,
+        // so StoreKit returns no products and the offering has no packages. Verifies the
+        // paywall renders (with fallback prices) instead of crashing.
+        if ProcessInfo.processInfo.arguments.contains("-paywallTest") {
+            isPremium = false
+            packages = []
+            return
+        }
         #endif
         Purchases.shared.delegate = self
         Task { await checkEntitlements() }
@@ -192,7 +200,10 @@ final class SubscriptionManager: NSObject {
     }
 
     /// Actual savings percentage vs monthly for yearly plan
-    func yearlySavingsPercent(yearlyPackage: Package, monthlyPackage: Package?) -> Int {
+    func yearlySavingsPercent(yearlyPackage: Package?, monthlyPackage: Package?) -> Int {
+        // No live pricing yet (e.g. offerings still loading or unavailable in review
+        // sandbox) → show the accurate static fallback instead of crashing.
+        guard let yearlyPackage else { return 58 }
         let yearlyPrice = yearlyPackage.storeProduct.price as Decimal
         if let monthly = monthlyPackage {
             let monthlyPrice = monthly.storeProduct.price as Decimal

@@ -43,12 +43,22 @@ struct ContentView: View {
         }
     }
 
+    private var isPaywallTest: Bool {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains("-paywallTest")
+        #else
+        return false
+        #endif
+    }
+
     var body: some View {
         ZStack {
             Color.maxxBackground.ignoresSafeArea()
 
             if showSplash {
                 splashScreen
+            } else if isPaywallTest {
+                PaywallView(viewModel: OnboardingViewModel()) {}
             } else if hasCompletedOnboarding {
                 mainTabView
             } else {
