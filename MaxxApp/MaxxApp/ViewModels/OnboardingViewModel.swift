@@ -13,6 +13,7 @@ final class OnboardingViewModel {
         case focusAreas
         case age
         case commitment
+        case reminders
         case analyzing
         case paywall
     }
@@ -27,6 +28,10 @@ final class OnboardingViewModel {
     var showPaywall = false
     var isAnalyzing = false
 
+    // Daily reminder preference (collected during onboarding at peak motivation)
+    var reminderEnabled = true
+    var reminderTime: Date = Calendar.current.date(bySettingHour: 8, minute: 0, second: 0, of: .now) ?? .now
+
     var progress: Double {
         Double(currentStep.rawValue) / Double(OnboardingStep.allCases.count - 1)
     }
@@ -39,6 +44,7 @@ final class OnboardingViewModel {
         case .focusAreas: !selectedFocusAreas.isEmpty
         case .age: age >= 13 && age <= 99
         case .commitment: selectedCommitment != nil
+        case .reminders: true
         case .analyzing: false
         case .paywall: true
         }
@@ -130,9 +136,17 @@ final class OnboardingViewModel {
 
         modelContext.insert(profile)
 
-        // Insert default routines
+        // Insert default routines, personalized to the user's chosen focus areas.
+        // Routines matching a focus area are active; others stay in the library but
+        // inactive, so the user's "plan" reflects what they said they care about.
+        // If nothing matches (or no focus areas chosen), keep them all active.
+        let focus = selectedFocusAreas.map(\.rawValue)
         let defaults = Routine.defaultRoutines()
+        let anyMatch = !focus.isEmpty && defaults.contains { focus.contains($0.category) }
         for routine in defaults {
+            if anyMatch {
+                routine.isActive = focus.contains(routine.category)
+            }
             modelContext.insert(routine)
         }
 

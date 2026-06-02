@@ -7,7 +7,8 @@ struct AnalyticsDashboardView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \DailyLog.date, order: .reverse) private var logs: [DailyLog]
     @Query(sort: \Routine.sortOrder) private var routines: [Routine]
-    @Query private var photos: [ProgressPhoto]
+    // Only the count is needed here — fetch it instead of loading every full-res photo blob.
+    @State private var photoCount: Int = 0
     @State private var selectedTimeRange: TimeRange = .week
 
     enum TimeRange: String, CaseIterable {
@@ -32,6 +33,9 @@ struct AnalyticsDashboardView: View {
             .background(Color.maxxBackground)
             .navigationTitle("Analytics")
             .navigationBarTitleDisplayMode(.large)
+            .task {
+                photoCount = (try? modelContext.fetchCount(FetchDescriptor<ProgressPhoto>())) ?? 0
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }
@@ -229,7 +233,7 @@ struct AnalyticsDashboardView: View {
         return LazyVGrid(columns: columns, spacing: 14) {
             statCard(
                 title: "Total Photos",
-                value: "\(photos.count)",
+                value: "\(photoCount)",
                 icon: "camera.fill",
                 color: .maxxPrimary
             )

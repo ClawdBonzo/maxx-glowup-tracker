@@ -27,6 +27,7 @@ struct LevelUpAnimationView: View {
     @State private var confettiActive = false
     @State private var particleY: CGFloat = -100
     @State private var particles: [ConfettiParticle] = []
+    @State private var showShare = false
 
     private let neonColors: [Color] = [
         Color(hex: "8B00FF"), Color(hex: "00F0FF"), Color(hex: "FFD700"),
@@ -147,7 +148,43 @@ struct LevelUpAnimationView: View {
                         )
                         .opacity(opacity)
                 }
+
+                // Share button
+                Button {
+                    showShare = true
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.headline)
+                        Text("Share My Level-Up")
+                            .font(.headline)
+                            .fontWeight(.black)
+                    }
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 32)
+                    .padding(.vertical, 14)
+                    .background(
+                        LinearGradient(
+                            colors: [Color(hex: "FFD700"), Color(hex: "FF8C00")],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .clipShape(Capsule())
+                    .shadow(color: Color(hex: "FFD700").opacity(0.6), radius: 14)
+                }
+                .opacity(opacity)
+                .scaleEffect(opacity > 0 ? 1 : 0.8)
+                .padding(.top, 8)
             }
+        }
+        .sheet(isPresented: $showShare) {
+            ShareGlowUpView(
+                title: "Leveled Up!",
+                emoji: level.emoji,
+                subtitle: "Reached \(level.displayName)",
+                level: level.displayName
+            )
         }
         .onAppear {
             spawnConfetti()

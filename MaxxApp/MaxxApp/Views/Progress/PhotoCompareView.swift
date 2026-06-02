@@ -6,6 +6,8 @@ struct PhotoCompareView: View {
     @State private var photoB: ProgressPhoto?
     @State private var sliderPosition: CGFloat = 0.5
     @State private var isDragging = false
+    @State private var renderedShare: UIImage?
+    @State private var showShareSheet = false
 
     var body: some View {
         ZStack {
@@ -280,6 +282,93 @@ struct PhotoCompareView: View {
         }
         .navigationTitle("Compare")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                if photoA != nil && photoB != nil {
+                    Button {
+                        renderAndShare()
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.maxxPrimary, .maxxCyan],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    }
+                    .accessibilityLabel(Text("Share comparison"))
+                }
+            }
+        }
+        .sheet(isPresented: $showShareSheet) {
+            if let img = renderedShare {
+                ShareSheet(items: [img])
+            }
+        }
+    }
+
+    // MARK: - Shareable Before/After Card
+
+    private func comparisonShareCard(_ a: ProgressPhoto, _ b: ProgressPhoto) -> some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 6) {
+                beforeAfterTile(a, label: "BEFORE", date: a.capturedAt.shortFormatted)
+                beforeAfterTile(b, label: "AFTER", date: b.capturedAt.shortFormatted)
+            }
+            HStack {
+                Text("MAXX")
+                    .font(.system(size: 13, weight: .black, design: .rounded))
+                    .tracking(5)
+                    .foregroundStyle(
+                        LinearGradient(colors: [.maxxPrimary, .maxxCyan], startPoint: .leading, endPoint: .trailing)
+                    )
+                Spacer()
+                Text("My Glow-Up ✨")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.8))
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+        }
+        .frame(width: 640)
+        .background(Color(hex: "08080F"))
+    }
+
+    private func beforeAfterTile(_ photo: ProgressPhoto, label: String, date: String) -> some View {
+        ZStack(alignment: .topLeading) {
+            if let img = UIImage(data: photo.imageData) {
+                Image(uiImage: img)
+                    .resizable()
+                    .aspectRatio(0.75, contentMode: .fill)
+                    .frame(width: 314, height: 418)
+                    .clipped()
+            } else {
+                Rectangle().fill(Color.maxxSurface).frame(width: 314, height: 418)
+            }
+
+            Text(label)
+                .font(.system(size: 11, weight: .black))
+                .tracking(2)
+                .foregroundColor(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(.black.opacity(0.6))
+                .clipShape(Capsule())
+                .padding(10)
+        }
+    }
+
+    @MainActor
+    private func renderAndShare() {
+        guard let a = photoA, let b = photoB else { return }
+        HapticService.selection()
+        let renderer = ImageRenderer(content: comparisonShareCard(a, b))
+        renderer.scale = 2.0
+        if let img = renderer.uiImage {
+            renderedShare = img
+            showShareSheet = true
+        }
     }
 
     private func photoSelectionThumbnail(_ photo: ProgressPhoto) -> some View {

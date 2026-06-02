@@ -52,6 +52,7 @@ struct NeonParticleLayer: View {
     var opacity: Double = 1.0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @State private var animating = false
     @State private var particles: [Particle] = []
 
@@ -113,6 +114,10 @@ struct NeonParticleLayer: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                     animating = true
                 }
+            }
+            // Pause the repeating animations while backgrounded/inactive to save battery.
+            .onChange(of: scenePhase) { _, phase in
+                animating = (phase == .active)
             }
         }
         .allowsHitTesting(false)

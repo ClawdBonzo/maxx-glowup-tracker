@@ -88,7 +88,7 @@ struct ContentView: View {
             }
             #endif
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                 withAnimation(.easeOut(duration: 0.5)) {
                     showSplash = false
                 }
@@ -209,6 +209,13 @@ struct ContentView: View {
 
     private func checkOnboardingStatus() {
         hasCompletedOnboarding = profile?.hasCompletedOnboarding ?? false
+
+        // Break a stale streak if a day was missed since the last activity.
+        if let profile {
+            let before = profile.currentStreak
+            profile.refreshStreak()
+            if profile.currentStreak != before { try? modelContext.save() }
+        }
 
         // Sync premium state from RevenueCat → SwiftData
         if let profile, subManager.isPremium, !profile.isPremium {

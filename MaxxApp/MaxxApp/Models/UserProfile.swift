@@ -69,6 +69,8 @@ final class UserProfile {
         Calendar.current.dateComponents([.day], from: createdAt, to: .now).day ?? 0
     }
 
+    /// Register an "active day". Idempotent per calendar day — calling it multiple times
+    /// in the same day (e.g. completing several routines) only counts once.
     func updateStreak() {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: .now)
@@ -77,9 +79,11 @@ final class UserProfile {
             let lastDay = calendar.startOfDay(for: lastDate)
             let daysBetween = calendar.dateComponents([.day], from: lastDay, to: today).day ?? 0
 
-            if daysBetween == 1 {
+            if daysBetween == 0 {
+                return // already counted today — don't inflate streak or totalCheckIns
+            } else if daysBetween == 1 {
                 currentStreak += 1
-            } else if daysBetween > 1 {
+            } else {
                 currentStreak = 1
             }
         } else {
@@ -92,5 +96,20 @@ final class UserProfile {
 
         lastCheckInDate = .now
         totalCheckIns += 1
+    }
+
+    /// Break the streak if a full day was missed. Call on app launch so a stale streak
+    /// doesn't keep showing on Home after the user skips a day.
+    func refreshStreak() {
+        guard let lastDate = lastCheckInDate else { return }
+        let calendar = Calendar.current
+        let gap = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: lastDate),
+            to: calendar.startOfDay(for: .now)
+        ).day ?? 0
+        if gap > 1 {
+            currentStreak = 0
+        }
     }
 }

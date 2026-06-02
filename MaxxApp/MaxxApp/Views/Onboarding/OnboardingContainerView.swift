@@ -38,6 +38,9 @@ struct OnboardingContainerView: View {
                     CommitmentLevelView(viewModel: viewModel)
                         .tag(OnboardingViewModel.OnboardingStep.commitment)
 
+                    RemindersView(viewModel: viewModel)
+                        .tag(OnboardingViewModel.OnboardingStep.reminders)
+
                     AnalyzingView(viewModel: viewModel)
                         .tag(OnboardingViewModel.OnboardingStep.analyzing)
 
@@ -58,7 +61,7 @@ struct OnboardingContainerView: View {
 
     private var onboardingProgressBar: some View {
         HStack(spacing: 4) {
-            ForEach(0..<7, id: \.self) { index in
+            ForEach(0..<8, id: \.self) { index in
                 Capsule()
                     .fill(index <= viewModel.currentStep.rawValue - 1
                           ? Color.maxxPrimary

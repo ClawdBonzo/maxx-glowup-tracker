@@ -4,8 +4,11 @@ import SwiftData
 @Model
 final class ProgressPhoto {
     var id: UUID
-    var imageData: Data
-    var thumbnailData: Data?
+    // Store large image blobs as external files rather than inline in the SQLite row,
+    // so SwiftData doesn't materialize every full-res JPEG into memory when the model
+    // is fetched (e.g. via @Query).
+    @Attribute(.externalStorage) var imageData: Data
+    @Attribute(.externalStorage) var thumbnailData: Data?
     var category: String
     var note: String
     var capturedAt: Date

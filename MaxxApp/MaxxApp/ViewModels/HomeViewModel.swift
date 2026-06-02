@@ -67,15 +67,26 @@ final class HomeViewModel {
     }
 
     func calculateGlowScore(profile: UserProfile, routines: [Routine]) -> Double {
+        let b = glowScoreBreakdown(profile: profile, routines: routines)
+        return min(b.routines + b.streak + b.mood, 100)
+    }
+
+    struct GlowScoreBreakdown {
+        var routines: Double   // out of 50
+        var streak: Double     // out of 20
+        var mood: Double       // out of 30
+        var total: Double { min(routines + streak + mood, 100) }
+    }
+
+    /// The component contributions behind the Glow Score, so the UI can explain the number.
+    func glowScoreBreakdown(profile: UserProfile, routines: [Routine]) -> GlowScoreBreakdown {
         let completionRate = todayCompletionPercentage(routines: routines)
         let streakBonus = min(Double(profile.currentStreak) * 2, 20)
-        let moodScore: Double
-        if let log = todayLog {
-            moodScore = log.averageRating / 5.0 * 30
-        } else {
-            moodScore = 0
-        }
-        let score = (completionRate * 50) + streakBonus + moodScore
-        return min(score, 100)
+        let moodScore = (todayLog?.averageRating ?? 0) / 5.0 * 30
+        return GlowScoreBreakdown(
+            routines: completionRate * 50,
+            streak: streakBonus,
+            mood: moodScore
+        )
     }
 }

@@ -10,6 +10,7 @@ struct HomeView: View {
     @State private var showDailyCheckIn = false
     @State private var showAnalytics = false
     @State private var showAnalyticsGate = false
+    @State private var showGlowBreakdown = false
 
     /// Shared across all tabs — created in ContentView
     var gamificationVM: GamificationViewModel?
@@ -49,6 +50,15 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showAnalyticsGate) {
                 PremiumGateView(feature: .analytics)
+            }
+            .sheet(isPresented: $showGlowBreakdown) {
+                GlowScoreBreakdownSheet(
+                    breakdown: viewModel.glowScoreBreakdown(
+                        profile: profile ?? UserProfile(),
+                        routines: routines
+                    )
+                )
+                .presentationDetents([.medium])
             }
         }
     }
@@ -246,20 +256,31 @@ struct HomeView: View {
                 size: 160
             )
 
-            Text("Today's Glow Score")
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.maxxCyan, .maxxPrimary],
-                        startPoint: .leading,
-                        endPoint: .trailing
+            HStack(spacing: 5) {
+                Text("Today's Glow Score")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.maxxCyan, .maxxPrimary],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
                     )
-                )
+                Image(systemName: "info.circle")
+                    .font(.caption)
+                    .foregroundColor(.maxxTextMuted)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)
         .neonCard(cornerRadius: 24, glowColor: .maxxCyan)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            HapticService.selection()
+            showGlowBreakdown = true
+        }
+        .accessibilityHint(Text("Shows how your glow score is calculated"))
     }
 
     // MARK: - Today's Routines
@@ -371,6 +392,9 @@ struct HomeView: View {
             profile?.updateStreak()
             let xpReward = 25 + (routine.durationMinutes / 5)
             gamificationVM?.addXP(xpReward, reason: "Routine: \(routine.name)")
+            // Keep the single gamification streak in sync with the profile streak,
+            // award the once-per-day streak bonus, and re-check streak badges.
+            gamificationVM?.registerDailyActivity(streakDays: profile?.currentStreak ?? 0)
         }
         try? modelContext.save()
         HapticService.impact(.medium)
@@ -587,5 +611,79 @@ struct DailyCheckInSheet: View {
         let bonusXP = (mood + skinRating + confidenceRating) / 3 - 3
         gamificationVM?.addXP(baseXP + max(0, bonusXP * 5), reason: "Daily check-in")
         HapticService.success()
+    }
+}
+
+// MARK: - Glow Score Breakdown Sheet
+
+struct GlowScoreBreakdownSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let breakdown: HomeViewModel.GlowScoreBreakdown
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.maxxBackground.ignoresSafeArea()
+
+                VStack(spacing: 24) {
+                    VStack(spacing: 4) {
+                        Text("\(Int(breakdown.total))")
+                            .font(.system(size: 56, weight: .black, design: .rounded))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.white, .maxxPrimary],
+                                    startPoint: .top, endPoint: .bottom
+                                )
+                            )
+                        Text("Today's Glow Score")
+                            .font(.subheadline)
+                            .foregroundColor(.maxxTextSecondary)
+                    }
+                    .padding(.top, 12)
+
+                    VStack(spacing: 14) {
+                        row("Routines completed", value: breakdown.routines, max: 50, icon: "checkmark.circle.fill", color: .maxxPrimary)
+                        row("Active streak", value: breakdown.streak, max: 20, icon: "flame.fill", color: .maxxAccent)
+                        row("Daily check-in mood", value: breakdown.mood, max: 30, icon: "face.smiling", color: .maxxGold)
+                    }
+                    .padding(20)
+                    .neonCard(cornerRadius: 20, glowColor: .maxxCyan)
+
+                    Text("Complete more routines, keep your streak alive, and check in daily to raise your score.")
+                        .font(.caption)
+                        .foregroundColor(.maxxTextMuted)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+            }
+            .navigationTitle("Your Glow Score")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                        .foregroundColor(.maxxPrimary)
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    private func row(_ title: LocalizedStringKey, value: Double, max: Double, icon: String, color: Color) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .foregroundColor(color)
+                .frame(width: 24)
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.white)
+            Spacer()
+            Text("\(Int(value)) / \(Int(max))")
+                .font(.subheadline)
+                .fontWeight(.bold)
+                .foregroundColor(color)
+        }
     }
 }

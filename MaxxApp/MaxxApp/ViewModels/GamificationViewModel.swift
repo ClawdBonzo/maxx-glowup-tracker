@@ -12,6 +12,9 @@ final class GamificationViewModel {
     var showBadgeUnlockAnimation = false
     var selectedBadge: Badge?
 
+    /// Latest known progress-photo count, used to evaluate photo-based badges.
+    var totalPhotos: Int = 0
+
     let modelContext: ModelContext
 
     init(modelContext: ModelContext) {
@@ -21,6 +24,7 @@ final class GamificationViewModel {
         loadQuests()
         loadBadges()
         initializeDefaultBadges()
+        totalPhotos = (try? modelContext.fetchCount(FetchDescriptor<ProgressPhoto>())) ?? 0
     }
 
     // MARK: - Initialization
@@ -97,6 +101,11 @@ final class GamificationViewModel {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 self.showLevelUpAnimation = false
             }
+            // Positive moment → consider asking for an App Store review.
+            ReviewPromptService.registerPositiveEvent()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                ReviewPromptService.requestIfAppropriate()
+            }
         }
 
         try? modelContext.save()
@@ -112,8 +121,24 @@ final class GamificationViewModel {
     // MARK: - Quests
 
     func createDailyQuests() {
-        let today = Calendar.current.startOfDay(for: .now)
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
+
+        // Prune stale daily quests from previous days so rows don't accumulate forever.
+        let stale = quests.filter { $0.type == .daily && !calendar.isDateInToday($0.createdDate) }
+        if !stale.isEmpty {
+            let staleIDs = Set(stale.map(\.id))
+            for quest in stale { modelContext.delete(quest) }
+            quests.removeAll { staleIDs.contains($0.id) }
+        }
+
+        // Guard: only create one set of daily quests per calendar day.
+        let hasTodayQuests = quests.contains { $0.type == .daily && calendar.isDateInToday($0.createdDate) }
+        guard !hasTodayQuests else {
+            try? modelContext.save()
+            return
+        }
 
         let dailyQuests = [
             Quest(type: .daily, title: String(localized: "quest.morning.title", defaultValue: "Morning Routine"), description: String(localized: "quest.morning.desc", defaultValue: "Complete any morning habit"), icon: "🌅", xpReward: 50, targetDate: tomorrow),
@@ -125,6 +150,7 @@ final class GamificationViewModel {
             modelContext.insert(quest)
         }
         quests.append(contentsOf: dailyQuests)
+        gamificationState.lastDailyQuestReset = .now
         try? modelContext.save()
     }
 
@@ -144,38 +170,59 @@ final class GamificationViewModel {
     }
 
     func getActiveDailyQuests() -> [Quest] {
-        let today = Calendar.current.startOfDay(for: .now)
-        return quests.filter { q in
+        quests.filter { q in
             q.type == .daily &&
-                Calendar.current.startOfDay(for: q.targetDate) == today &&
+                Calendar.current.isDateInToday(q.createdDate) &&
                 !q.isCompleted
         }
     }
 
     func getCompletedDailyQuests() -> [Quest] {
-        let today = Calendar.current.startOfDay(for: .now)
-        return quests.filter { q in
+        quests.filter { q in
             q.type == .daily &&
-                Calendar.current.startOfDay(for: q.targetDate) == today &&
+                Calendar.current.isDateInToday(q.createdDate) &&
                 q.isCompleted
         }
     }
 
     // MARK: - Streaks & Multipliers
 
-    func updateDailyStreak() {
-        gamificationState.resetStreakIfNeeded()
-        gamificationState.incrementStreak()
+    /// Single source of truth for the streak. Driven by `UserProfile.currentStreak` (the
+    /// canonical streak that updates on the first activity each day), this syncs the
+    /// gamification state, awards the once-per-day streak bonus, fires milestone haptics,
+    /// and re-checks streak-based badges.
+    func registerDailyActivity(streakDays: Int) {
+        let calendar = Calendar.current
+        let alreadyAwardedToday = calendar.isDateInToday(gamificationState.streakLastUpdated)
 
-        let multiplier = min(1 + Double(gamificationState.currentStreak) / 10.0, 2.5)
-        let bonusXP = Int(Double(25) * multiplier)
-        addXP(bonusXP, reason: "Daily streak bonus (\(gamificationState.currentStreak) days)")
+        gamificationState.currentStreak = streakDays
+        if streakDays > gamificationState.longestStreak {
+            gamificationState.longestStreak = streakDays
+        }
 
-        if gamificationState.currentStreak % 7 == 0 {
-            HapticService.streakMilestone()
+        if !alreadyAwardedToday {
+            gamificationState.streakLastUpdated = .now
+            let multiplier = min(1 + Double(streakDays) / 10.0, 2.5)
+            let bonusXP = Int(Double(25) * multiplier)
+            addXP(bonusXP, reason: "Daily streak bonus (\(streakDays) days)")
+
+            if streakDays > 0 && streakDays % 7 == 0 {
+                HapticService.streakMilestone()
+                ReviewPromptService.registerPositiveEvent()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    ReviewPromptService.requestIfAppropriate()
+                }
+            }
         }
 
         try? modelContext.save()
+        checkBadgeProgress()
+    }
+
+    /// Update the known photo count and re-check photo-based badges.
+    func registerPhotoCount(_ count: Int) {
+        totalPhotos = count
+        checkBadgeProgress()
     }
 
     var streakMultiplier: Double {
@@ -200,8 +247,8 @@ final class GamificationViewModel {
             return gamificationState.totalXP >= target
         case .routinesCompleted(let target):
             return gamificationState.totalQuestsCompleted >= target
-        case .photosUploaded:
-            return false // Would be tracked separately by progress photos
+        case .photosUploaded(let target):
+            return totalPhotos >= target
         case .levelReached(let target):
             return JawlineLevel.forXP(gamificationState.totalXP).rawValue >= target
         }

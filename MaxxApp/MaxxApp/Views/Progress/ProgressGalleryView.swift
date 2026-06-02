@@ -250,13 +250,9 @@ struct ProgressGalleryView: View {
 
     private func photoThumbnail(_ photo: ProgressPhoto) -> some View {
         Group {
-            if let thumbnailData = photo.thumbnailData,
-               let uiImage = UIImage(data: thumbnailData) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(1, contentMode: .fill)
-                    .clipped()
-            } else if let uiImage = UIImage(data: photo.imageData) {
+            // Decode once and cache (keyed by photo id) instead of re-decoding the JPEG
+            // on every cell recycle / scroll pass on the main thread.
+            if let uiImage = ThumbnailCache.shared.image(for: photo.id, data: photo.thumbnailData ?? photo.imageData) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .aspectRatio(1, contentMode: .fill)

@@ -41,6 +41,10 @@ final class ProgressViewModel {
         // Award XP for photo upload
         gamificationVM?.addXP(75, reason: "Progress photo: \(category.rawValue)")
 
+        // Update photo count so the "Transformation" (10 photos) badge can unlock.
+        let count = (try? modelContext.fetchCount(FetchDescriptor<ProgressPhoto>())) ?? 0
+        gamificationVM?.registerPhotoCount(count)
+
         newPhotoNote = ""
         HapticService.success()
     }
