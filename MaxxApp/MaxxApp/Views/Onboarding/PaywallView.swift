@@ -10,7 +10,7 @@ struct PaywallView: View {
     @Environment(\.openURL) private var openURL
     @State private var subManager  = SubscriptionManager.shared
     @State private var animate      = false
-    @State private var selectedPID: SubscriptionManager.ProductID = .monthly
+    @State private var selectedPID: SubscriptionManager.ProductID = .yearly
     @State private var selectedLive: Package?
     @State private var isPurchasing = false
     @State private var showCelebration = false
@@ -67,13 +67,19 @@ struct PaywallView: View {
 
     private var mainContent: some View {
         VStack(spacing: 0) {
-            compactHero
-            tagline
-            planCards
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    hero
+                    benefitList
+                    planCards
+                }
+                .padding(.bottom, 8)
+            }
+            // Sticky CTA so it's always visible regardless of device height
             ctaSection
             footerLinks
         }
-        .padding(.bottom, 12)
+        .padding(.bottom, 10)
     }
 
     // MARK: - Dismiss
@@ -100,72 +106,86 @@ struct PaywallView: View {
         .frame(minHeight: 38)
     }
 
-    // MARK: - Compact Hero (icon + title, ~90pt total)
+    // MARK: - Hero
 
-    private var compactHero: some View {
-        HStack(spacing: 14) {
-            // Neon icon lockup
+    private var hero: some View {
+        VStack(spacing: 12) {
             ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(LinearGradient(
-                        colors: [Color.maxxPrimary, Color.maxxCyan],
-                        startPoint: .topLeading, endPoint: .bottomTrailing
+                Circle()
+                    .fill(RadialGradient(
+                        colors: [Color.maxxPrimary.opacity(0.45), .clear],
+                        center: .center, startRadius: 2, endRadius: 64
                     ))
-                    .frame(width: 52, height: 52)
-                    .shadow(color: Color.maxxPrimary.opacity(0.55), radius: 12, y: 4)
+                    .frame(width: 128, height: 128)
 
-                Image(systemName: "sparkles")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.white)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(LinearGradient(
+                            colors: [Color.maxxPrimary, Color.maxxCyan],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        ))
+                        .frame(width: 72, height: 72)
+                        .shadow(color: Color.maxxPrimary.opacity(0.6), radius: 18, y: 6)
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 32, weight: .bold))
+                        .foregroundColor(.white)
+                }
             }
             .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text("Unlock Maxx Pro")
-                    .font(.title3).fontWeight(.black).foregroundColor(.white)
-                Text("Transformation on your terms")
-                    .font(.subheadline).foregroundColor(.maxxTextSecondary)
+            VStack(spacing: 4) {
+                Text("Maxx Pro")
+                    .font(.system(size: 34, weight: .black))
+                    .foregroundStyle(LinearGradient(
+                        colors: [.white, Color.maxxCyan],
+                        startPoint: .leading, endPoint: .trailing
+                    ))
+                Text("Unlock your full glow-up")
+                    .font(.subheadline)
+                    .foregroundColor(.maxxTextSecondary)
             }
-
-            Spacer()
         }
-        .padding(.horizontal, 22)
-        .padding(.top, 4)
+        .frame(maxWidth: .infinity)
+        .padding(.top, 2)
+        .padding(.bottom, 12)
         .opacity(animate ? 1 : 0)
         .offset(y: animate ? 0 : 10)
         .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.05), value: animate)
+        .accessibilityElement(children: .combine)
     }
 
-    // MARK: - Tagline (feature pills)
+    // MARK: - Benefit list ("everything in Pro")
 
-    private var tagline: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                pill(icon: "camera.fill",               label: "Progress photos")
-                pill(icon: "flame.fill",                label: "XP & levels")
-                pill(icon: "chart.line.uptrend.xyaxis", label: "Glow analytics")
-                pill(icon: "lock.open.fill",            label: "All future features")
-            }
-            .padding(.horizontal, 22)
+    private var benefitList: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            benefitRow("infinity", "Unlimited routines & progress photos")
+            benefitRow("rectangle.on.rectangle.angled", "Side-by-side compare & Mirror Mode")
+            benefitRow("flame.fill", "Daily quests, badges & XP")
+            benefitRow("chart.line.uptrend.xyaxis", "Glow analytics & trends")
+            benefitRow("lock.open.fill", "Every future Pro feature")
         }
-        .padding(.top, 14)
-        .padding(.bottom, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 26)
+        .padding(.bottom, 14)
         .opacity(animate ? 1 : 0)
-        .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.1), value: animate)
+        .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.12), value: animate)
     }
 
-    private func pill(icon: String, label: LocalizedStringKey) -> some View {
-        HStack(spacing: 5) {
-            Image(systemName: icon).font(.system(size: 10, weight: .semibold))
-            Text(label).font(.system(size: 11, weight: .semibold))
+    private func benefitRow(_ icon: String, _ text: LocalizedStringKey) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.maxxCyan.opacity(0.14))
+                    .frame(width: 26, height: 26)
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.maxxCyan)
+            }
+            Text(text)
+                .font(.subheadline)
+                .foregroundColor(.white)
+            Spacer(minLength: 0)
         }
-        .foregroundColor(.maxxCyan)
-        .padding(.horizontal, 10).padding(.vertical, 6)
-        .background(Color.maxxCyan.opacity(0.10))
-        .overlay(
-            Capsule().stroke(Color.maxxCyan.opacity(0.3), lineWidth: 1)
-        )
-        .clipShape(Capsule())
     }
 
     // MARK: - Plan Cards
@@ -190,7 +210,7 @@ struct PaywallView: View {
     @ViewBuilder
     private func planCard(_ pid: SubscriptionManager.ProductID) -> some View {
         let isSelected  = selectedPID == pid
-        let isBest      = pid == .monthly
+        let featured    = pid == .yearly
         let pkg         = liveMap[pid]
 
         // Pricing strings
@@ -198,17 +218,9 @@ struct PaywallView: View {
         let period      = pkg.map { subManager.periodLabel($0) } ?? subManager.fallbackPeriod(for: pid)
         let hasTrial    = pkg.map { subManager.hasTrial($0) } ?? pid.hasTrial
         let weeklyEq    = pkg.flatMap { subManager.weeklyEquivalent(for: $0) }
-
-        // Savings badge for yearly
-        let savingsPct: Int = {
-            if pid == .yearly {
-                return subManager.yearlySavingsPercent(
-                    yearlyPackage: pkg ?? liveMap[.yearly],
-                    monthlyPackage: liveMap[.monthly]
-                )
-            }
-            return 0
-        }()
+        let savingsPct  = pid == .yearly
+            ? subManager.yearlySavingsPercent(yearlyPackage: pkg ?? liveMap[.yearly], monthlyPackage: liveMap[.monthly])
+            : 0
 
         Button {
             withAnimation(.spring(response: 0.28, dampingFraction: 0.72)) {
@@ -217,158 +229,90 @@ struct PaywallView: View {
             }
             HapticService.selection()
         } label: {
-            ZStack(alignment: .topTrailing) {
-                // Card background (glassmorphism)
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(isSelected
-                          ? (isBest
-                             ? Color.maxxPrimary.opacity(0.18)
-                             : Color.white.opacity(0.07))
-                          : Color.white.opacity(0.04))
+            HStack(spacing: 12) {
+                // Selection ring
+                ZStack {
+                    Circle()
+                        .stroke(isSelected ? Color.maxxPrimary : Color.white.opacity(0.22), lineWidth: 1.5)
+                        .frame(width: 22, height: 22)
+                    if isSelected {
+                        Circle().fill(Color.maxxPrimary).frame(width: 12, height: 12)
+                            .transition(.scale.combined(with: .opacity))
+                    }
+                }
+                .animation(.spring(response: 0.25), value: isSelected)
+
+                // Plan info
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 6) {
+                        Text(pid.displayName)
+                            .font(.subheadline).fontWeight(.bold).foregroundColor(.white)
+                        if pid == .yearly && savingsPct > 0 {
+                            planBadge("SAVE \(savingsPct)%",
+                                      fill: AnyShapeStyle(LinearGradient(colors: [.maxxGold, Color(hex: "FF8C00")],
+                                                          startPoint: .leading, endPoint: .trailing)))
+                        } else if pid == .monthly {
+                            planBadge("POPULAR", fill: AnyShapeStyle(Color.maxxCyan))
+                        }
+                    }
+                    Text(planSubtitle(pid, hasTrial: hasTrial))
+                        .font(.caption2)
+                        .foregroundColor(featured ? .maxxCyan : .maxxTextSecondary)
+                }
+
+                Spacer(minLength: 8)
+
+                // Price column
+                VStack(alignment: .trailing, spacing: 1) {
+                    HStack(alignment: .lastTextBaseline, spacing: 1) {
+                        Text(price).font(.system(size: 17, weight: .bold)).foregroundColor(.white)
+                        if !period.isEmpty {
+                            Text(period).font(.caption2).foregroundColor(.maxxTextSecondary)
+                        }
+                    }
+                    if let eq = weeklyEq {
+                        Text(eq).font(.system(size: 9)).foregroundColor(.maxxTextMuted)
+                    }
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 13)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(isSelected ? Color.maxxPrimary.opacity(0.16) : Color.white.opacity(0.04))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .stroke(
                                 isSelected
-                                ? (isBest
-                                   ? LinearGradient(colors: [Color.maxxPrimary, Color.maxxCyan],
-                                                    startPoint: .leading, endPoint: .trailing)
-                                   : LinearGradient(colors: [Color.white.opacity(0.5), Color.white.opacity(0.2)],
-                                                    startPoint: .leading, endPoint: .trailing))
-                                : LinearGradient(colors: [Color.white.opacity(0.08)],
-                                                 startPoint: .leading, endPoint: .trailing),
+                                ? AnyShapeStyle(LinearGradient(colors: [Color.maxxPrimary, Color.maxxCyan],
+                                                               startPoint: .leading, endPoint: .trailing))
+                                : AnyShapeStyle(Color.white.opacity(featured ? 0.18 : 0.08)),
                                 lineWidth: isSelected ? 1.5 : 1
                             )
                     )
-
-                // Card content
-                HStack(spacing: 12) {
-                    // Selection ring
-                    ZStack {
-                        Circle()
-                            .stroke(
-                                isSelected
-                                ? (isBest ? Color.maxxPrimary : Color.white.opacity(0.7))
-                                : Color.white.opacity(0.2),
-                                lineWidth: 1.5
-                            )
-                            .frame(width: 20, height: 20)
-                        if isSelected {
-                            Circle()
-                                .fill(isBest ? Color.maxxPrimary : Color.white)
-                                .frame(width: 11, height: 11)
-                                .transition(.scale.combined(with: .opacity))
-                        }
-                    }
-                    .animation(.spring(response: 0.25), value: isSelected)
-
-                    // Plan info
-                    VStack(alignment: .leading, spacing: 3) {
-                        HStack(spacing: 6) {
-                            Text(pid.displayName)
-                                .font(.subheadline).fontWeight(.bold)
-                                .foregroundColor(.white)
-
-                            // BEST VALUE gold badge
-                            if isBest {
-                                Text("BEST VALUE")
-                                    .font(.system(size: 8, weight: .heavy))
-                                    .foregroundColor(.maxxBackground)
-                                    .padding(.horizontal, 6).padding(.vertical, 2.5)
-                                    .background(
-                                        LinearGradient(
-                                            colors: [Color.maxxGold, Color(hex: "FF8C00")],
-                                            startPoint: .leading, endPoint: .trailing
-                                        )
-                                    )
-                                    .clipShape(Capsule())
-                            }
-
-                            // Yearly savings badge
-                            if pid == .yearly && savingsPct > 0 {
-                                Text("SAVE \(savingsPct)%")
-                                    .font(.system(size: 8, weight: .heavy))
-                                    .foregroundColor(.maxxBackground)
-                                    .padding(.horizontal, 6).padding(.vertical, 2.5)
-                                    .background(Color.maxxCyan)
-                                    .clipShape(Capsule())
-                            }
-                        }
-
-                        // Subtitle line: trial or weekly-eq or one-time note
-                        Group {
-                            if hasTrial {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "gift.fill")
-                                        .font(.system(size: 9))
-                                        .foregroundColor(.maxxCyan)
-                                    Text("3-day free trial included")
-                                        .font(.caption2)
-                                        .foregroundColor(.maxxCyan)
-                                }
-                            } else if let eq = weeklyEq {
-                                Text("Just \(eq)")
-                                    .font(.caption2)
-                                    .foregroundColor(.maxxTextSecondary)
-                            } else if pid == .lifetime {
-                                Text("Pay once · own forever")
-                                    .font(.caption2)
-                                    .foregroundColor(.maxxTextSecondary)
-                            } else {
-                                Text("No trial · cancel anytime")
-                                    .font(.caption2)
-                                    .foregroundColor(.maxxTextSecondary)
-                            }
-                        }
-                    }
-
-                    Spacer()
-
-                    // Price column
-                    VStack(alignment: .trailing, spacing: 2) {
-                        HStack(alignment: .lastTextBaseline, spacing: 1) {
-                            Text(price)
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(.white)
-                            if !period.isEmpty {
-                                Text(period)
-                                    .font(.caption2)
-                                    .foregroundColor(.maxxTextSecondary)
-                            }
-                        }
-                        if pid == .monthly {
-                            Text("after trial")
-                                .font(.system(size: 9))
-                                .foregroundColor(.maxxTextSecondary)
-                        }
-                        if pid == .yearly {
-                            Text("after trial")
-                                .font(.system(size: 9))
-                                .foregroundColor(.maxxTextSecondary)
-                        }
-                    }
-                }
-                .padding(.horizontal, 14).padding(.vertical, 13)
-
-                // POPULAR corner badge (monthly only)
-                if isBest {
-                    Text("POPULAR")
-                        .font(.system(size: 7, weight: .heavy))
-                        .foregroundColor(.maxxBackground)
-                        .padding(.horizontal, 7).padding(.vertical, 3)
-                        .background(
-                            LinearGradient(
-                                colors: [Color.maxxPrimary, Color.maxxCyan],
-                                startPoint: .leading, endPoint: .trailing
-                            )
-                        )
-                        .clipShape(Capsule())
-                        .padding(.top, -1).padding(.trailing, 10)
-                }
-            }
+            )
         }
         .buttonStyle(.plain)
         .accessibilityLabel(accessibilityLabel(for: pid, price: price, period: period, hasTrial: hasTrial))
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private func planBadge(_ text: String, fill: AnyShapeStyle) -> some View {
+        Text(text)
+            .font(.system(size: 8, weight: .heavy))
+            .foregroundColor(.maxxBackground)
+            .padding(.horizontal, 6).padding(.vertical, 2.5)
+            .background(fill)
+            .clipShape(Capsule())
+    }
+
+    private func planSubtitle(_ pid: SubscriptionManager.ProductID, hasTrial: Bool) -> LocalizedStringKey {
+        switch pid {
+        case .weekly:   return "Billed weekly"
+        case .monthly:  return hasTrial ? "3-day free trial included" : "Billed monthly"
+        case .yearly:   return hasTrial ? "Best value · 3-day free trial" : "Best value · billed yearly"
+        case .lifetime: return "Pay once · yours forever"
+        }
     }
 
     private func accessibilityLabel(
