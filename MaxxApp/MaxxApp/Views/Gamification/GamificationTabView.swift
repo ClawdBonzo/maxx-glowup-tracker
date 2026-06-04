@@ -178,8 +178,9 @@ struct GamificationTabView: View {
                         )
 
                     HStack(spacing: 8) {
-                        Text(level.emoji)
+                        Image(systemName: level.iconName)
                             .font(.headline)
+                            .foregroundStyle(LinearGradient(colors: [.maxxGold, .maxxCyan], startPoint: .top, endPoint: .bottom))
                             .neonGlow(color: .maxxPrimary, radius: 8)
                         Text(level.displayName)
                             .font(.subheadline)
@@ -610,8 +611,10 @@ struct LevelTabContentView: View {
                                         intensity: isCurrent ? 0.9 : 0
                                     )
 
-                                Text(lv.emoji)
-                                    .font(.headline)
+                                Image(systemName: lv.iconName)
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
                                     .opacity(isReached ? 1 : 0.4)
                             }
 

@@ -177,14 +177,13 @@ struct ContentView: View {
                     }
                 } label: {
                     VStack(spacing: 4) {
-                        Image(tab.icon)
-                            .renderingMode(.template)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 22, height: 22)
+                        Image(systemName: tab.sfIcon)
+                            .font(.system(size: 21, weight: selectedTab == tab ? .bold : .semibold))
+                            .symbolRenderingMode(.hierarchical)
+                            .frame(height: 24)
 
                         Text(tab.rawValue)
-                            .font(.system(size: 10, weight: .medium))
+                            .font(.system(size: 10, weight: .semibold))
                     }
                     .foregroundColor(selectedTab == tab ? .maxxPrimary : .maxxTextMuted)
                     .frame(maxWidth: .infinity)

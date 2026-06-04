@@ -70,8 +70,9 @@ struct HomeView: View {
         return VStack(spacing: 12) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(level.emoji)
-                        .font(.title)
+                    Image(systemName: level.iconName)
+                        .font(.title2)
+                        .foregroundStyle(LinearGradient(colors: [.maxxGold, .maxxCyan], startPoint: .top, endPoint: .bottom))
                         .neonGlow(color: .maxxPrimary, radius: 10)
                     Text(level.displayName)
                         .font(.caption)

@@ -31,6 +31,17 @@ enum JawlineLevel: Int, Codable, CaseIterable, Identifiable {
         }
     }
 
+    /// SF Symbol for the level medal. Used in persistent UI (rings, roadmap, headers)
+    /// where it renders crisply and reliably — unlike a color emoji, which can fail to
+    /// render under `.drawingGroup()` / certain font contexts.
+    var iconName: String {
+        switch self {
+        case .bronzeJawline, .silverJawline, .goldJawline: "medal.fill"
+        case .platinumJawline: "trophy.fill"
+        case .diamondJawline: "crown.fill"
+        }
+    }
+
     var xpRequired: Int {
         switch self {
         case .bronzeJawline: 0

@@ -54,8 +54,11 @@ struct GlowScoreRingView: View {
 
                 // Center content
                 VStack(spacing: 8) {
-                    Text(level.emoji)
-                        .font(.system(size: 48))
+                    Image(systemName: level.iconName)
+                        .font(.system(size: 46, weight: .bold))
+                        .foregroundStyle(
+                            LinearGradient(colors: gradientColors, startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
                         .accessibilityHidden(true)
 
                     Text(level.displayName)
