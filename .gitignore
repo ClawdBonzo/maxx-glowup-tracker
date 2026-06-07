@@ -91,3 +91,8 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+
+# Local archive/export artifacts
+.build_artifacts/
+AppStore/v12_src_iphone/
+AppStore/v12_src_ipad/
